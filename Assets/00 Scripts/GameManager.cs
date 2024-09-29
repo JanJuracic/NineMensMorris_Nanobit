@@ -10,6 +10,7 @@ public class GameManager : MonoBehaviour
 {
     [Header("Required Managers")]
     [SerializeField] BoardManager boardManager;
+    [SerializeField] BatchAnimator batchAnim;
 
     [Header("Player Data and Supply")]
     [SerializeField] PlayerData playerOne;
@@ -28,6 +29,7 @@ public class GameManager : MonoBehaviour
     //PROPERTIES, used by the state machine
     public BoardAndRulesData BRData => boardAndRules;
     public BoardManager Board => boardManager;
+    public BatchAnimator BatchAnim => batchAnim;
     public PlayerData CurrentPlayer { get; private set; }
     public PlayerData EnemyPlayer => CurrentPlayer == playerOne ? playerTwo : playerOne;
     public int NewMillsCreatedLastAction { get; set; }

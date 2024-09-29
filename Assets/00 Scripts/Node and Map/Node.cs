@@ -13,13 +13,13 @@ namespace NineMensMorris
         private readonly BoardManager boardManager;
 
         //Associated Monobehaviours
-        NodeMono myNodeMono;
-        Token myToken;
+        NodeMono mono;
+        Token token;
 
         //Properties
         public List<Vector2Int> EdgeDirections => new(edgeDirections);
-        public NodeMono NodeMono => myNodeMono;
-        public Token Token => myToken;
+        public NodeMono Mono => mono;
+        public Token Token => token;
 
         public Node(Vector2Int coord, Vector3 localPos, List<Vector2Int> localEdgeDirections, BoardManager manager)
         {
@@ -36,23 +36,21 @@ namespace NineMensMorris
 
         public void SetupMono(NodeMono nodeMono)
         {
-            this.myNodeMono = nodeMono;
-            myNodeMono.Setup(this);
+            mono = nodeMono;
+            mono.Setup(this);
         }
 
         #region Token Handling
 
         public void UnlinkToken()
         {
-            myToken = null;
+            token = null;
         }
 
         public void LinkToken(Token token)
         {
-            myToken = token;
-
-            token.transform.SetParent(myNodeMono.transform);
-            token.SlideTo(this);
+            this.token = token;
+            token.transform.SetParent(mono.transform);
         }
 
         public void DestroyToken()

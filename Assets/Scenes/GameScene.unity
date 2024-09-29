@@ -483,6 +483,7 @@ GameObject:
   - component: {fileID: 1064723247}
   - component: {fileID: 1064723248}
   - component: {fileID: 1064723246}
+  - component: {fileID: 1064723249}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -548,6 +549,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   boardManager: {fileID: 1064723246}
+  batchAnim: {fileID: 1064723249}
   playerOne: {fileID: 11400000, guid: 5aacb6113a45c824fa125e4de299a8c7, type: 2}
   playerTwo: {fileID: 11400000, guid: 3f0efa62d169a314eb965c4e84fdcd88, type: 2}
   boardAndRules: {fileID: 11400000, guid: a84ed6ce4ab085f46a37da95c17e5040, type: 2}
@@ -557,6 +559,19 @@ MonoBehaviour:
   OnDrawGame:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &1064723249
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1064723245}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d25041ef18b1a049a95d3c075e3a864, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bm: {fileID: 1064723246}
 --- !u!1 &2006778033
 GameObject:
   m_ObjectHideFlags: 0

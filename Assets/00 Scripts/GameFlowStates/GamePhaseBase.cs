@@ -3,6 +3,7 @@ using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor.Experimental.GraphView;
 
 namespace NineMensMorris
 {
@@ -41,6 +42,11 @@ namespace NineMensMorris
         public virtual void EvaluateNodeClicked(Node node) { }
 
         public virtual void Exit() { }
+
+        protected void TriggerInvalidNodeAnimation(Node node)
+        {
+            node.Mono.Shake();
+        }
     }
 
     public class LoadLevel : GamePhaseBase
@@ -93,14 +99,17 @@ namespace NineMensMorris
         {
             if (node.Token == null)
             {
-                gm.CurrentPlayer.TokenManager.SendTopTokenToNode(node);
+                Token token = gm.CurrentPlayer.TokenManager.SendTopTokenToNode(node);
+                node.LinkToken(token);
                 gm.UpdateMillsAndSetNewMillCount(null, node, gm.CurrentPlayer);
+
+                token.FlyTo(node);
 
                 ChangeState(PhaseName.EvaluatePlayerMove);
             }
             else
             {
-                //Node INVALID animation
+                TriggerInvalidNodeAnimation(node);
             }
         }
     }
@@ -108,15 +117,37 @@ namespace NineMensMorris
     public class MoveTokenOnBoard : GamePhaseBase
     {
         Node nodeWithFriendlyToken;
-        List<Node> validTargetNodes;
+        List<Node> tokenNodesForSelection;
+        List<Node> emptyNodesForMovement;
         bool moveComplete;
 
         public MoveTokenOnBoard(GameManager gameManager) : base(gameManager)
         {
             name = PhaseName.MoveTokenOnBoard;
             nodeWithFriendlyToken = null;
-            validTargetNodes = new();
+            tokenNodesForSelection = new();
+            emptyNodesForMovement = new();
             moveComplete = false;
+        }
+
+        public override void Enter()
+        {
+            if (PlayerCanFly())
+            {
+                tokenNodesForSelection = gm.Board.GetAllPlayerTokenNodes(gm.CurrentPlayer);
+                emptyNodesForMovement = gm.Board.GetAllEmptyNodes();
+            }
+            else
+            {
+                tokenNodesForSelection = gm.Board
+                    .GetAllPlayerTokenNodes(gm.CurrentPlayer)
+                    .Where(n => gm.Board.GetConnectingNodes(n).Count > 0)
+                    .ToList();
+
+                emptyNodesForMovement.Clear();
+            }
+
+            gm.BatchAnim.MarkValidNodesForMovement(emptyNodesForMovement);
         }
 
         public override void EvaluateNodeClicked(Node node)
@@ -147,66 +178,54 @@ namespace NineMensMorris
         public override void Exit()
         {
             nodeWithFriendlyToken = null;
-            validTargetNodes.Clear();
+            tokenNodesForSelection.Clear();
+            emptyNodesForMovement.Clear();
             moveComplete = false;
         }
 
         private void AttemptSelectFriendlyTokenNode(Node selectedNode)
         {
-            if (NodeContainsFriendlyToken(selectedNode) == false)
+            if (tokenNodesForSelection.Contains(selectedNode) == false)
             {
-                //TODO: node invalid animation
+                TriggerInvalidNodeAnimation(selectedNode);
                 return;
             }
 
             nodeWithFriendlyToken = selectedNode;
             //TODO: friendly node selected animation
 
-            validTargetNodes.Clear();
-            //If player's tokens can fly
-            if (gm.CurrentPlayer.TokenManager.LivingTokensCount <= gm.BRData.MaxTokensForFlying)
+            if (PlayerCanFly() == false)
             {
-                var allNodes = gm.Board.GetAllNodes();
-                foreach (var node in allNodes)
-                {
-                    if (node.Token == null) validTargetNodes.Add(node);
-                }
+                emptyNodesForMovement = gm.Board.GetConnectingNodes(selectedNode);
+                gm.BatchAnim.MarkValidNodesForMovement(emptyNodesForMovement);
             }
-            else
-            {
-                var connectingNodes = gm.Board.GetConnectingNodes(selectedNode);
-                foreach (var node in connectingNodes)
-                {
-                    if (node.Token == null) validTargetNodes.Add(node);
-                }
-            }
-
-            Debug.Log($"Connecting Nodes: {validTargetNodes.Count}");
-            //TODO: Animate validTargetNodes
         }
 
         private void AttemptMoveTokenToNewNode(Node targetNode)
         {
-            if (validTargetNodes.Contains(targetNode) == false)
+            if (emptyNodesForMovement.Contains(targetNode) == false)
             {
-                //TODO: node invalid animation
+                TriggerInvalidNodeAnimation(targetNode);
                 return;
             }
 
+            //Handle linking to node
             Token token = nodeWithFriendlyToken.Token;
             nodeWithFriendlyToken.UnlinkToken();
             targetNode.LinkToken(token);
+
+            //Animate movement
+            if (PlayerCanFly()) token.FlyTo(targetNode);
+            else token.SlideTo(targetNode);
 
             gm.UpdateMillsAndSetNewMillCount(nodeWithFriendlyToken, targetNode, gm.CurrentPlayer);
 
             moveComplete = true;
         }
 
-        private bool NodeContainsFriendlyToken(Node node)
+        private bool PlayerCanFly()
         {
-            if (node.Token == null) return false;
-            if (node.Token.Player == gm.CurrentPlayer) return true;
-            return false;
+            return gm.CurrentPlayer.TokenManager.LivingTokensCount <= gm.BRData.MaxTokensForFlying;
         }
     }
 
@@ -296,7 +315,7 @@ namespace NineMensMorris
             }
             else
             {
-                //TODO: invalid selection animation
+                TriggerInvalidNodeAnimation(node);
             }
         }
 

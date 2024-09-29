@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: CustomData
   m_EditorClassIdentifier: 
   numOfTokensForMill: 3
-  tokensPerPlayer: 10
+  tokensPerPlayer: 4
   maxTokensForFlying: 3
   ringCount: 3
   includeDiagonalConnections: 0

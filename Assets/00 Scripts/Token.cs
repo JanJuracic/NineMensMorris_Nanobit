@@ -1,4 +1,5 @@
 using NineMensMorris;
+using NUnit.Framework.Constraints;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -12,9 +13,15 @@ public class Token : MonoBehaviour
     [SerializeField] SpriteRenderer tokenVisual;
     [SerializeField] SpriteRenderer shadowVisual;
 
-    [Header("Movement Settings")]
+    [Header("Movement Animation Settings")]
+    [Header("Slide")]
     [SerializeField] AnimationCurve slideCurve;
-    [SerializeField][Range(0f, 1f)] float slideFactor = 0.3f;
+    [SerializeField][Range(1f, 3f)] float slideRelativeSpeed = 1f;
+
+    [Header("Fly")]
+    [SerializeField] AnimationCurve flyCurve;
+    [SerializeField][Range(0.1f, 1f)] float flyHeightToLengthRatio = 0.5f;
+    [SerializeField][Range(12, 20f)] float flySpeedPerSecond = 15f;
 
     //Properties
     public PlayerData Player => player;
@@ -36,28 +43,67 @@ public class Token : MonoBehaviour
 
     public void SlideTo(Node node)
     {
-        StartCoroutine(Co_SlideTo(node.NodeMono.transform.position));
+        StartCoroutine(Co_SlideTo(node.Mono.transform));
     }
 
-    private IEnumerator Co_SlideTo(Vector3 targetPos)
+    public void FlyTo(Node node)
+    {
+        StartCoroutine(Co_FlyTo(node.Mono.transform));
+    }
+
+    private IEnumerator Co_SlideTo(Transform targetTr)
     {
         Vector3 startPos = transform.position;  
-        float exponentialLerp = 0f;
+        float t = 0f;
 
         while (true)
         {
-            exponentialLerp = Mathf.Lerp(exponentialLerp, 1, slideFactor);
-            float animationLerp = slideCurve.Evaluate(exponentialLerp);
+            t = Mathf.MoveTowards(t, 1, slideRelativeSpeed * Time.deltaTime);            
+            float animationLerpValue = slideCurve.Evaluate(t);
 
-            transform.position = Vector3.LerpUnclamped(startPos, targetPos, animationLerp);
+            transform.position = Vector3.LerpUnclamped(startPos, targetTr.position, animationLerpValue);
 
-            if (exponentialLerp > 0.995f)
+            if (t > 0.995f)
             {
-                transform.position = targetPos;
+                transform.position = targetTr.position;
                 break;
             }
 
-            yield return new WaitForFixedUpdate();
+            yield return null;
+        }
+    }
+
+    private IEnumerator Co_FlyTo(Transform targetTr)
+    {
+        Vector3 startPos = transform.position;
+        Vector3 visualOriginLocPos = tokenVisual.transform.localPosition;
+
+        float distanceToTarget = (startPos - targetTr.position).magnitude;
+        float flyHeight = distanceToTarget * flyHeightToLengthRatio;
+
+        float t = 0f;
+        float distanceCrossed = 0f;
+        while (true)
+        {
+            distanceCrossed = Mathf.MoveTowards(distanceCrossed, distanceToTarget, flySpeedPerSecond * Time.deltaTime);
+            t = distanceCrossed / distanceToTarget;
+
+            //Move token
+            transform.position = Vector3.Lerp(startPos, targetTr.position, t);
+
+            //Move token visual upwards along curve
+            float animationLerpValue = flyCurve.Evaluate(t);
+            float tokenVisHeight = Mathf.LerpUnclamped(0, flyHeight, animationLerpValue);
+            tokenVisual.transform.localPosition = new Vector3(visualOriginLocPos.x, tokenVisHeight, visualOriginLocPos.z);
+
+            if (t > 0.995f)
+            {
+                transform.position = targetTr.position;
+                tokenVisual.transform.localPosition = visualOriginLocPos;
+                break;
+            }
+
+            yield return null;
         }
     }
 }

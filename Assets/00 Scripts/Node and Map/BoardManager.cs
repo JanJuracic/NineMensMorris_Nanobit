@@ -1,9 +1,7 @@
-using JetBrains.Annotations;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.NetworkInformation;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
@@ -202,7 +200,12 @@ namespace NineMensMorris
             {
                 EdgeRenderer er = Instantiate(edgeRendererPrefab, transform.position, transform.rotation, transform);
                 Node[] nodes = set.ToArray();
-                er.SetupEndNodes(nodes[0].NodeMono, nodes[1].NodeMono);
+
+                nodes[0].Mono.AddEdgeRenderer(er);
+                nodes[1].Mono.AddEdgeRenderer(er);
+
+                er.SetupEndNodes(nodes[0].Mono, nodes[1].Mono);
+                er.UpdateLineEndpoints();
             }
         }
 
@@ -232,6 +235,13 @@ namespace NineMensMorris
         public List<Node> GetAllNodes()
         {
             return nodeMap.Values.ToList();
+        }
+
+        public List<Node> GetAllEmptyNodes()
+        {
+            return nodeMap.Values
+                .Where(n => n.Token == null)
+                .ToList();
         }
 
         public List<Node> GetAllPlayerTokenNodes(PlayerData targetPlayer)

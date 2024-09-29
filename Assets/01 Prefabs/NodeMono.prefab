@@ -134,6 +134,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   holeMask: {fileID: 4149031935864050685}
   interactionCollider: {fileID: -4230329251543801310}
+  shakeDur: 0.5
+  shakeStrength: 0.282
+  shakeFrequency: 13.54
 --- !u!58 &-4230329251543801310
 CircleCollider2D:
   m_ObjectHideFlags: 0

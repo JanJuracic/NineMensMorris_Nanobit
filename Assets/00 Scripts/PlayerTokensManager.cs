@@ -45,12 +45,12 @@ public class PlayerTokensManager : MonoBehaviour
         tokensInSupply.Add(token);
     }
 
-    public void SendTopTokenToNode(Node node)
+    public Token SendTopTokenToNode(Node node)
     {
         Token topToken = tokensInSupply[0];
-        node.LinkToken(topToken);
         tokensInSupply.Remove(topToken);
         tokensOnBoard.Add(topToken);
+        return topToken;
     }
 
     public void HandleTokenDestroyed(Token token)

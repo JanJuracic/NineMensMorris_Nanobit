@@ -20,12 +20,18 @@ public class EdgeRenderer : MonoBehaviour
     {
         firstNodeMono = firstNode;
         secondNodeMono = secondNode;
-        UpdateLineEndpoints();
     }
 
     public void UpdateLineEndpoints()
     {
         lr.SetPosition(0, firstNodeMono.transform.position);
         lr.SetPosition(1, secondNodeMono.transform.position);
+    }
+
+    public bool ConnectsToNodeMono(NodeMono node)
+    {
+        if (firstNodeMono == node) return true;
+        if (secondNodeMono == node) return true;
+        return false;
     }
 }
