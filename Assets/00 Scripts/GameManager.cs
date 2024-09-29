@@ -2,7 +2,6 @@ using NineMensMorris;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
@@ -16,11 +15,8 @@ public class GameManager : MonoBehaviour
     [SerializeField] PlayerData playerOne;
     [SerializeField] PlayerData playerTwo;
 
-    [Header("Variables")]
-    [SerializeField] int numOfTokensForMill = 3;
-    [SerializeField] int tokensPerPlayer = 10;
-    [SerializeField] int maxTokensForFlying = 3;
-    [SerializeField] int minTokensForSurvival = 3;
+    [Header("Board and Rules")]
+    [SerializeField] BoardAndRulesData boardAndRules;
 
     [Header("Unity Events")]
     [SerializeField] UnityEvent<PlayerData> OnPlayerWin;
@@ -28,13 +24,13 @@ public class GameManager : MonoBehaviour
 
     List<HashSet<Node>> currentMills = new();
 
+
     //PROPERTIES, used by the state machine
+    public BoardAndRulesData BRData => boardAndRules;
     public BoardManager Board => boardManager;
-    public PlayerData CurrentPlayer { get; set; }
+    public PlayerData CurrentPlayer { get; private set; }
     public PlayerData EnemyPlayer => CurrentPlayer == playerOne ? playerTwo : playerOne;
-    public PlayerTokenMove LatestPlayerMove { get; set; }
-    public int MaxTokensForFlying => maxTokensForFlying;
-    public int MinTokensForSurvival => minTokensForSurvival;
+    public int NewMillsCreatedLastAction { get; set; }
 
 
     List<GamePhaseBase> gamePhases = new();
@@ -82,10 +78,10 @@ public class GameManager : MonoBehaviour
         CurrentPlayer = CurrentPlayer == playerOne ? playerTwo : playerOne;
     }
 
-    public void FillTokenSupplies()
+    public void SetupTokenManagers()
     {
-        playerOne.TokenManager.InstantiateTokens(tokensPerPlayer);
-        playerTwo.TokenManager.InstantiateTokens(tokensPerPlayer);
+        playerOne.TokenManager.InstantiateTokens(boardAndRules.TokensPerPlayer);
+        playerTwo.TokenManager.InstantiateTokens(boardAndRules.TokensPerPlayer);
     }
 
     public HashSet<Node> GetAllNodesInMills(PlayerData targetPlayer)
@@ -101,39 +97,37 @@ public class GameManager : MonoBehaviour
         return result;
     }
 
-    /// <summary>
-    /// Returns true if new mills have been created. 
-    /// </summary>
-    public int UpdateMillsAndGetNewMillCount()
+    public void UpdateMillsAndSetNewMillCount(Node tokenStartNode, Node tokenEndNode, PlayerData player)
     {
-        Node startNode = LatestPlayerMove.StartNode;
-        Node endNode = LatestPlayerMove.EndNode;
-        PlayerData player = LatestPlayerMove.Player;
+        List<HashSet<Node>> newMills = boardManager.GetNewMills(tokenEndNode, player, boardAndRules.NumOfTokensForMill);
 
-        List<HashSet<Node>> newMills = boardManager.GetNewMills(endNode, player, numOfTokensForMill);
+        UpdateMillsForRemovedToken(tokenStartNode);
 
+        currentMills.AddRange(newMills);
+
+        NewMillsCreatedLastAction = newMills.Count;
+    }
+
+    public void UpdateMillsForRemovedToken(Node nodeWithRemovedToken)
+    {
         //Remove any mills that are no longer valid, due to a moved token
-        if (startNode != null )
+        if (nodeWithRemovedToken != null)
         {
             for (int i = currentMills.Count - 1; 0 < i; i--)
             {
                 HashSet<Node> mill = currentMills[i];
-                if (mill.Contains(startNode))
+                if (mill.Contains(nodeWithRemovedToken))
                 {
                     currentMills.RemoveAt(i);
                 }
             }
         }
-
-        currentMills.AddRange(newMills);
-
-        return newMills.Count;
     }
 
     public bool PlayerHasLegalMoves(PlayerData targetPlayer)
     {
         //If the player can fly, or still has tokens in supply
-        if (targetPlayer.TokenManager.LivingTokensCount <= maxTokensForFlying
+        if (targetPlayer.TokenManager.LivingTokensCount <= boardAndRules.MaxTokensForFlying
             || targetPlayer.TokenManager.TokensInSupplyCount > 0)
         {
             List<Node> emptyNodes = Board
@@ -174,16 +168,3 @@ public class GameManager : MonoBehaviour
     }
 }
 
-public class PlayerTokenMove
-{
-    public readonly Node StartNode;
-    public readonly Node EndNode;
-    public readonly PlayerData Player;
-
-    public PlayerTokenMove(Node start, Node end, PlayerData player)
-    {
-        StartNode = start;
-        EndNode = end;
-        Player = player;
-    }
-}

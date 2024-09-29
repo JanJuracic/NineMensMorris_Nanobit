@@ -52,8 +52,8 @@ namespace NineMensMorris
 
         public override void Enter()
         {
-            gm.Board.SetupBoard(); //TODO: Don't hold creation data in Board, hold it in a SO
-            gm.FillTokenSupplies();
+            gm.Board.SetupBoard(gm.BRData); 
+            gm.SetupTokenManagers();
         
             ChangeState(PhaseName.SwitchPlayer);
         }
@@ -94,7 +94,8 @@ namespace NineMensMorris
             if (node.Token == null)
             {
                 gm.CurrentPlayer.TokenManager.SendTopTokenToNode(node);
-                gm.LatestPlayerMove = new PlayerTokenMove(null, node, gm.CurrentPlayer);
+                gm.UpdateMillsAndSetNewMillCount(null, node, gm.CurrentPlayer);
+
                 ChangeState(PhaseName.EvaluatePlayerMove);
             }
             else
@@ -163,7 +164,7 @@ namespace NineMensMorris
 
             validTargetNodes.Clear();
             //If player's tokens can fly
-            if (gm.CurrentPlayer.TokenManager.LivingTokensCount <= gm.MaxTokensForFlying)
+            if (gm.CurrentPlayer.TokenManager.LivingTokensCount <= gm.BRData.MaxTokensForFlying)
             {
                 var allNodes = gm.Board.GetAllNodes();
                 foreach (var node in allNodes)
@@ -196,7 +197,7 @@ namespace NineMensMorris
             nodeWithFriendlyToken.UnlinkToken();
             targetNode.LinkToken(token);
 
-            gm.LatestPlayerMove = new PlayerTokenMove(nodeWithFriendlyToken, targetNode, gm.CurrentPlayer);
+            gm.UpdateMillsAndSetNewMillCount(nodeWithFriendlyToken, targetNode, gm.CurrentPlayer);
 
             moveComplete = true;
         }
@@ -219,7 +220,7 @@ namespace NineMensMorris
         public override void Enter()
         {
             //Player has made at least one mill and must destroy opponent's token
-            if (gm.UpdateMillsAndGetNewMillCount() > 0)
+            if (gm.NewMillsCreatedLastAction > 0)
             {
                 ChangeState(PhaseName.DestroyToken);
             }
@@ -238,6 +239,11 @@ namespace NineMensMorris
             {
                 ChangeState(PhaseName.SwitchPlayer);
             }
+        }
+
+        public override void Exit()
+        {
+            gm.NewMillsCreatedLastAction = 0;
         }
     }
 
@@ -279,7 +285,7 @@ namespace NineMensMorris
                 DestroyTokenOnNode(node);
 
                 //Check if win condition satisfied
-                if (gm.EnemyPlayer.TokenManager.LivingTokensCount < gm.MinTokensForSurvival)
+                if (gm.EnemyPlayer.TokenManager.LivingTokensCount < gm.BRData.NumOfTokensForMill)
                 {
                     ChangeState(PhaseName.WinGame);
                 }
@@ -296,6 +302,7 @@ namespace NineMensMorris
 
         private void DestroyTokenOnNode(Node node)
         {
+            gm.UpdateMillsForRemovedToken(node);
             Token token = node.Token;
             node.UnlinkToken();
             token.DestroyToken();

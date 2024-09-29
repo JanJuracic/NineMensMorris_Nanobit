@@ -503,9 +503,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ringOffset: 1.5
-  ringCount: 3
-  includeDiagonalConnections: 1
-  includeCenterNode: 0
   nodeMonoPrefab: {fileID: 9140364934009475466, guid: 21aba7d5b13a42a4ea84c6b780607e08, type: 3}
   edgeRendererPrefab: {fileID: 7307177311584904039, guid: 78844bac5e7cedf48843f8ccfcc75f86, type: 3}
   OnNodeClicked:
@@ -553,10 +550,7 @@ MonoBehaviour:
   boardManager: {fileID: 1064723246}
   playerOne: {fileID: 11400000, guid: 5aacb6113a45c824fa125e4de299a8c7, type: 2}
   playerTwo: {fileID: 11400000, guid: 3f0efa62d169a314eb965c4e84fdcd88, type: 2}
-  numOfTokensForMill: 3
-  tokensPerPlayer: 4
-  maxTokensForFlying: 3
-  minTokensForSurvival: 3
+  boardAndRules: {fileID: 11400000, guid: a84ed6ce4ab085f46a37da95c17e5040, type: 2}
   OnPlayerWin:
     m_PersistentCalls:
       m_Calls: []

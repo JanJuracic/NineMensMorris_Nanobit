@@ -17,11 +17,6 @@ namespace NineMensMorris
         [Header("Board Visuals")]
         [SerializeField] float ringOffset = 1f;
 
-        [Header("Node Map Settings")]
-        [SerializeField] int ringCount = 3;
-        [SerializeField] bool includeDiagonalConnections = false;
-        [SerializeField] bool includeCenterNode;
-
         [Header("Prefabs")]
         [SerializeField] NodeMono nodeMonoPrefab;
         [SerializeField] EdgeRenderer edgeRendererPrefab;
@@ -34,7 +29,7 @@ namespace NineMensMorris
 
         #region NodeMap Generation
 
-        private void CreateNewNodesAndMap()
+        private void CreateNewNodesAndMap(BoardAndRulesData data)
         {
             nodeMap.Clear();
 
@@ -49,10 +44,10 @@ namespace NineMensMorris
             }
 
             //Handle center node
-            if (includeCenterNode)
+            if (data.IncludeCenterNode)
             {
                 var coordinate = Vector2Int.zero;
-                var edgeDirections = GetEdgeDirectionsFromWorldCoord(coordinate, 0);
+                var edgeDirections = GetEdgeDirectionsFromWorldCoord(coordinate, 0, data);
                 var localPos = GetLocalPosition(coordinate);
 
                 Node centerNode = new Node(coordinate, localPos, edgeDirections, this);
@@ -60,7 +55,7 @@ namespace NineMensMorris
             }
 
             //Populate map with nodes
-            for (int ring = 1; ring <= ringCount; ring++)
+            for (int ring = 1; ring <= data.RingCount; ring++)
             {
                 for (int x = -1; x <= 1; x++) //This assumes 3 nodes per side of ring
                 {
@@ -69,7 +64,7 @@ namespace NineMensMorris
                         if (x == 0 && y == 0) continue; //There is no center node in a ring, all nodes are on the rim.
 
                         var coordinate = new Vector2Int(x * ring, y * ring);
-                        var edgeDirections = GetEdgeDirectionsFromWorldCoord(coordinate, ring);
+                        var edgeDirections = GetEdgeDirectionsFromWorldCoord(coordinate, ring, data);
                         var localPos = GetLocalPosition(coordinate);
 
                         Node node = new Node(coordinate, localPos, edgeDirections, this);
@@ -87,12 +82,12 @@ namespace NineMensMorris
             }
         }
 
-        private List<Vector2Int> GetEdgeDirectionsFromWorldCoord(Vector2Int boardCoord, int ring)
+        private List<Vector2Int> GetEdgeDirectionsFromWorldCoord(Vector2Int boardCoord, int ring, BoardAndRulesData data)
         {
             List<Vector2Int> results = new();
 
-            int lowestRingIndex = includeCenterNode ? 0 : 1;
-            int highestRingIndex = ringCount;
+            int lowestRingIndex = data.IncludeCenterNode ? 0 : 1;
+            int highestRingIndex = data.RingCount;
 
             if (boardCoord == Vector2Int.zero) //If it is center node
             {
@@ -102,7 +97,7 @@ namespace NineMensMorris
                 results.Add(Vector2Int.left);
                 results.Add(Vector2Int.right);
 
-                if (includeDiagonalConnections)
+                if (data.IncludeDiagonalConnections)
                 {
                     results.Add(Vector2Int.up + Vector2Int.left);
                     results.Add(Vector2Int.up + Vector2Int.right);
@@ -116,7 +111,7 @@ namespace NineMensMorris
                 results.Add(new Vector2Int(-boardCoord.x, 0));
                 results.Add(new Vector2Int(0, -boardCoord.y));
 
-                if (includeDiagonalConnections)
+                if (data.IncludeDiagonalConnections)
                 {
                     AddRingToRingConnections(boardCoord);
                 }
@@ -135,7 +130,6 @@ namespace NineMensMorris
                     results.Add(new Vector2Int(0, -1 * ring));
                 }
 
-                //Edges between rings
                 AddRingToRingConnections(boardCoord);
             }
             return results;
@@ -172,9 +166,9 @@ namespace NineMensMorris
             OnNodeClicked.Invoke(node);
         }
 
-        public void SetupBoard()
+        public void SetupBoard(BoardAndRulesData data)
         {
-            CreateNewNodesAndMap();
+            CreateNewNodesAndMap(data);
 
             //Create NodeMonos
             foreach (Node node in nodeMap.Values)
