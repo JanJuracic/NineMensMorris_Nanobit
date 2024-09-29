@@ -7,37 +7,65 @@ namespace NineMensMorris
 {
     public class Node
     {
-        public readonly Vector3Int WorldCoord;
+        public readonly Vector3Int BoardCoord;
+        public readonly Vector3 LocalPos;
+        private readonly List<Vector3Int> edgeDirections;
+        private readonly BoardManager boardManager;
 
-        //Variables
-        Vector3 localPos = Vector3.zero;
-        List<Vector3Int> edgeDirections = new();
+        //Associated Monobehaviours
         NodeMono myNodeMono;
+        Token myToken;
 
         //Properties
-        public Vector3 LocalPos => localPos;
         public List<Vector3Int> EdgeDirections => new(edgeDirections);
         public NodeMono NodeMono => myNodeMono;
+        public Token Token => myToken;
 
-        public Node(Vector3Int worldCoord)
+        public Node(Vector3Int coord, Vector3 localPos, List<Vector3Int> localEdgeDirections, BoardManager manager)
         {
-            WorldCoord = worldCoord;
+            BoardCoord = coord;
+            boardManager = manager;
+            LocalPos = localPos;
+            edgeDirections = localEdgeDirections;
         }
 
-        public void SetupEdgeDirections(List<Vector3Int> localEdgeDirections)
+        public override string ToString()
         {
-            edgeDirections.AddRange(localEdgeDirections);
-        }
-
-        public void SetupLocalPosition(Vector3 localPos)
-        {
-            this.localPos = localPos;
+            return $"Node({BoardCoord}";
         }
 
         public void SetupMono(NodeMono nodeMono)
         {
             this.myNodeMono = nodeMono;
             myNodeMono.Setup(this);
+        }
+
+        #region Token Handling
+
+        public void UnlinkToken()
+        {
+            myToken = null;
+        }
+
+        public void LinkToken(Token token)
+        {
+            myToken = token;
+
+            //TODO: Handle movement on Token
+            token.transform.position = myNodeMono.transform.position;
+            token.transform.SetParent(myNodeMono.transform);
+        }
+
+        public void DestroyToken()
+        {
+            
+        }
+
+        #endregion
+
+        public void HandleNodeClicked()
+        {
+            boardManager.HandleNodeClicked(this);
         }
     }
 }

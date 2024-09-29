@@ -96,6 +96,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4517562458347959192}
   - component: {fileID: 9140364934009475466}
+  - component: {fileID: -4230329251543801310}
   m_Layer: 0
   m_Name: NodeMono
   m_TagString: Untagged
@@ -131,6 +132,44 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 03dc182740e913344a50c9200459c6f7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  holeMask: {fileID: 4149031935864050685}
+  interactionCollider: {fileID: -4230329251543801310}
+--- !u!58 &-4230329251543801310
+CircleCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2278566523314345833}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 0, y: 0}
+  m_Radius: 0.5
 --- !u!1 &5916258936559332759
 GameObject:
   m_ObjectHideFlags: 0

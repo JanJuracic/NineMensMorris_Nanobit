@@ -1,8 +1,12 @@
+using JetBrains.Annotations;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.NetworkInformation;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace NineMensMorris 
 {
@@ -24,14 +28,13 @@ namespace NineMensMorris
 
         [Space]
 
-        [Header("Entity Collections")]
-        [SerializeField] List<EdgeRenderer> lineControllers = new();
-        [SerializeField] List<NodeMono> nodeMonos = new();
+        [Header("Unity Events")]
+        [SerializeField] UnityEvent<Node> OnNodeClicked;
 
 
         #region NodeMap Generation
 
-        public void CreateNewNodesAndMap()
+        private void CreateNewNodesAndMap()
         {
             nodeMap.Clear();
 
@@ -48,9 +51,12 @@ namespace NineMensMorris
             //Handle center node
             if (includeCenterNode)
             {
-                Node centerNode = new Node(Vector3Int.zero);
-                centerNode.SetupEdgeDirections(GetEdgeDirectionsFromWorldCoord(Vector3Int.zero));
-                nodeMap.Add(Vector3Int.zero, centerNode);
+                var coordinate = Vector3Int.zero;
+                var edgeDirections = GetEdgeDirectionsFromWorldCoord(coordinate);
+                var localPos = GetLocalPosition(coordinate);
+
+                Node centerNode = new Node(coordinate, localPos, edgeDirections, this);
+                nodeMap.Add(coordinate, centerNode);
             }
 
             //Populate map with nodes
@@ -62,20 +68,22 @@ namespace NineMensMorris
                     {
                         if (x == 0 && y == 0) continue; //There is no center node in a ring, all nodes are on the rim.
 
-                        Vector3Int worldCoordOfNode = new Vector3Int(x, y, ring);
-                        Node node = new Node(worldCoordOfNode);
+                        var coordinate = new Vector3Int(x, y, ring);
+                        var edgeDirections = GetEdgeDirectionsFromWorldCoord(coordinate);
+                        var localPos = GetLocalPosition(coordinate);
 
-                        node.SetupEdgeDirections(GetEdgeDirectionsFromWorldCoord(worldCoordOfNode));
+                        Node node = new Node(coordinate, localPos, edgeDirections, this);
 
-                        //Calculate local position, used to place NodeMonos
-                        float posX = x * ring * ringOffset;
-                        float posY = y * ring * ringOffset;
-                        Vector3 localPos = new Vector3(posX, posY, 0);
-                        node.SetupLocalPosition(localPos);
-
-                        nodeMap.Add(worldCoordOfNode, node);
+                        nodeMap.Add(coordinate, node);
                     }
                 }
+            }
+
+            Vector3 GetLocalPosition(Vector3Int coordinate)
+            {
+                float posX = coordinate.x * coordinate.z * ringOffset;
+                float posY = coordinate.y * coordinate.z * ringOffset;
+                return new Vector3(posX, posY, 0);
             }
         }
 
@@ -160,9 +168,12 @@ namespace NineMensMorris
 
         #endregion
 
+        public void HandleNodeClicked(Node node)
+        {
+            OnNodeClicked.Invoke(node);
+        }
 
-        [ContextMenu("Set Up Board")]
-        public void SetUpBoard()
+        public void SetupBoard()
         {
             CreateNewNodesAndMap();
 
@@ -183,7 +194,7 @@ namespace NineMensMorris
                     HashSet<Node> edgeNodeSet = new()
                     {
                         node,
-                        nodeMap[node.WorldCoord + edgeDirection]
+                        nodeMap[node.BoardCoord + edgeDirection]
                     };
 
                     //Ensure we have no duplicate edges. Edge A->B is equal to Edge B->A.
@@ -202,6 +213,134 @@ namespace NineMensMorris
             }
         }
 
+        private Node GetNode(Vector3Int coordinate)
+        {
+            try 
+            {
+                return nodeMap[coordinate];
+            }
+            catch 
+            { 
+                return null;
+            }
+        }
+
+        public List<Node> GetConnectingNodes(Node node)
+        {
+            List<Node> result = new();
+            foreach (Vector3Int edge in node.EdgeDirections)
+            {
+                Node connectingNode = GetNode(edge + node.BoardCoord);
+                if (connectingNode != null) result.Add(connectingNode);
+            }
+            return result;
+        }
+
+        public List<Node> GetAllNodes()
+        {
+            return nodeMap.Values.ToList();
+        }
+
+        public List<Node> GetAllPlayerTokenNodes(PlayerData targetPlayer)
+        {
+            return GetAllNodes()
+                .Where(n => n.Token != null)
+                .Where(n => n.Token.Player == targetPlayer)
+                .ToList();
+        }
+
+        public List<HashSet<Node>> GetNewMills(Node firstNode, PlayerData activePlayer, int numOfTokensForMill)
+        {
+            List<HashSet<Node>> foundMills = new();
+
+            if (numOfTokensForMill < 2)
+            {
+                throw new Exception($"Number of tokens per mill is too low ({numOfTokensForMill}), must be at least 2.");
+            }
+
+            //Check each connecting node to target node. For each direction 1 mill could be found.
+            foreach (Vector3Int direction in firstNode.EdgeDirections)
+            {
+                Node secondNode = GetNode(firstNode.BoardCoord + direction);
+
+                if (NodeHasFriendlyToken(secondNode) == false) continue;
+
+                HashSet<Node> mill = new()
+                {
+                    firstNode,
+                    secondNode
+                };
+
+                if (EnoughNodesInMill(mill)) //Could be true if numOfTokensForMill is 2
+                {
+                    foundMills.Add(mill);
+                    continue;
+                }
+
+                //Find the rest of connecting tokens in the direction of the edge
+                Vector3Int currentDirection = direction;
+                Node lastValidNode = secondNode;
+                bool reversedDirection = false; //We will reverse direction once, because our first node could have been in the middle of a mill.
+
+                for (int i = 0; i < numOfTokensForMill - 2; i++) // -2 because the first node and second node are already added.
+                {
+                    Vector3Int coordinateToCheck = lastValidNode.BoardCoord + currentDirection;
+                    Node node = GetNode(coordinateToCheck);
+
+                    if (NodeHasFriendlyToken(node))
+                    {
+                        mill.Add(node);
+
+                        if (EnoughNodesInMill(mill))
+                        {
+                            foundMills.Add(mill);
+                            break;
+                        }
+                        else lastValidNode = node;
+                    }
+                    else
+                    {
+                        if (reversedDirection)
+                        {
+                            //We have tried reversing direction once already.
+                            //There are no more potential nodes to check.
+                            //Abandon this mill.
+                            break;
+                        }
+
+                        currentDirection = -currentDirection;
+                        lastValidNode = firstNode;
+                        reversedDirection = true;
+                        i -= 1;
+                    }
+                }
+            }
+
+            //Remove any identical mills. 
+            //Two identical mills could be created if the first token in a 3 token mill is in the middle.
+            List<HashSet<Node>> uniqueMills = new();
+            foreach (HashSet<Node> mill in foundMills)
+            {
+                if (uniqueMills.Any(m => m.SetEquals(mill))) continue;
+                else uniqueMills.Add(mill);
+            }
+
+            return foundMills;
+
+            bool NodeHasFriendlyToken(Node node)
+            {
+                if (node == null) return false;
+                if (node.Token == null) return false;
+                if (node.Token.Player != activePlayer) return false;
+                return true;
+            }
+
+            bool EnoughNodesInMill(HashSet<Node> mill)
+            {
+                if (mill.Count == numOfTokensForMill) return true;
+                else return false;
+            }
+        }
     }
 }
 
