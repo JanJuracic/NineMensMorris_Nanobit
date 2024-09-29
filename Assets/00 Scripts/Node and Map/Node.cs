@@ -51,9 +51,8 @@ namespace NineMensMorris
         {
             myToken = token;
 
-            //TODO: Handle movement on Token
-            token.transform.position = myNodeMono.transform.position;
             token.transform.SetParent(myNodeMono.transform);
+            token.SlideTo(this);
         }
 
         public void DestroyToken()

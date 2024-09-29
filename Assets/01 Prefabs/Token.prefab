@@ -133,3 +133,46 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tokenVisual: {fileID: 8633005452528839611}
   shadowVisual: {fileID: 0}
+  slideCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.0000036398415
+      value: 0
+      inSlope: 0.3286153
+      outSlope: 0.3286153
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.12099998
+    - serializedVersion: 3
+      time: 0.82042736
+      value: 0.9829586
+      inSlope: 2.8747494
+      outSlope: 2.8747494
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.27316266
+    - serializedVersion: 3
+      time: 0.9422338
+      value: 1.000283
+      inSlope: -2.6425824
+      outSlope: -2.6425824
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.7158796
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: -0.36032918
+      outSlope: -0.36032918
+      tangentMode: 0
+      weightedMode: 2
+      inWeight: 1
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  slideFactor: 0.25
