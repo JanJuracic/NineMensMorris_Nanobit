@@ -12,7 +12,7 @@ namespace NineMensMorris
 {
     public class BoardManager : MonoBehaviour
     {
-        Dictionary<Vector3Int, Node> nodeMap = new();
+        Dictionary<Vector2Int, Node> nodeMap = new();
       
         [Header("Board Visuals")]
         [SerializeField] float ringOffset = 1f;
@@ -51,8 +51,8 @@ namespace NineMensMorris
             //Handle center node
             if (includeCenterNode)
             {
-                var coordinate = Vector3Int.zero;
-                var edgeDirections = GetEdgeDirectionsFromWorldCoord(coordinate);
+                var coordinate = Vector2Int.zero;
+                var edgeDirections = GetEdgeDirectionsFromWorldCoord(coordinate, 0);
                 var localPos = GetLocalPosition(coordinate);
 
                 Node centerNode = new Node(coordinate, localPos, edgeDirections, this);
@@ -68,8 +68,8 @@ namespace NineMensMorris
                     {
                         if (x == 0 && y == 0) continue; //There is no center node in a ring, all nodes are on the rim.
 
-                        var coordinate = new Vector3Int(x, y, ring);
-                        var edgeDirections = GetEdgeDirectionsFromWorldCoord(coordinate);
+                        var coordinate = new Vector2Int(x * ring, y * ring);
+                        var edgeDirections = GetEdgeDirectionsFromWorldCoord(coordinate, ring);
                         var localPos = GetLocalPosition(coordinate);
 
                         Node node = new Node(coordinate, localPos, edgeDirections, this);
@@ -79,89 +79,88 @@ namespace NineMensMorris
                 }
             }
 
-            Vector3 GetLocalPosition(Vector3Int coordinate)
+            Vector3 GetLocalPosition(Vector2Int coordinate)
             {
-                float posX = coordinate.x * coordinate.z * ringOffset;
-                float posY = coordinate.y * coordinate.z * ringOffset;
+                float posX = coordinate.x * ringOffset;
+                float posY = coordinate.y * ringOffset;
                 return new Vector3(posX, posY, 0);
             }
         }
 
-        private List<Vector3Int> GetEdgeDirectionsFromWorldCoord(Vector3Int worldCoord)
+        private List<Vector2Int> GetEdgeDirectionsFromWorldCoord(Vector2Int boardCoord, int ring)
         {
-            List<Vector3Int> localCoordsForEdges = new();
+            List<Vector2Int> results = new();
 
-            int lowestRingIndex = 1;
+            int lowestRingIndex = includeCenterNode ? 0 : 1;
             int highestRingIndex = ringCount;
 
-            if (worldCoord == Vector3Int.zero) //If is center node
+            if (boardCoord == Vector2Int.zero) //If it is center node
             {
                 //Cardinal edges
-                localCoordsForEdges.Add(Vector3Int.up + Vector3Int.forward);
-                localCoordsForEdges.Add(Vector3Int.down + Vector3Int.forward);
-                localCoordsForEdges.Add(Vector3Int.left + Vector3Int.forward);
-                localCoordsForEdges.Add(Vector3Int.right + Vector3Int.forward);
+                results.Add(Vector2Int.up);
+                results.Add(Vector2Int.down);
+                results.Add(Vector2Int.left);
+                results.Add(Vector2Int.right);
 
                 if (includeDiagonalConnections)
                 {
-                    localCoordsForEdges.Add(Vector3Int.up + Vector3Int.left + Vector3Int.forward);
-                    localCoordsForEdges.Add(Vector3Int.up + Vector3Int.right + Vector3Int.forward);
-                    localCoordsForEdges.Add(Vector3Int.down + Vector3Int.left + Vector3Int.forward);
-                    localCoordsForEdges.Add(Vector3Int.down + Vector3Int.right + Vector3Int.forward);
+                    results.Add(Vector2Int.up + Vector2Int.left);
+                    results.Add(Vector2Int.up + Vector2Int.right);
+                    results.Add(Vector2Int.down + Vector2Int.left);
+                    results.Add(Vector2Int.down + Vector2Int.right);
                 }
             }
-            else if (IsCornerNode(worldCoord))
+            else if (IsCornerNode(boardCoord))
             {
                 //Edges on same ring
-                localCoordsForEdges.Add(new Vector3Int(-worldCoord.x, 0, 0));
-                localCoordsForEdges.Add(new Vector3Int(0, -worldCoord.y, 0));
+                results.Add(new Vector2Int(-boardCoord.x, 0));
+                results.Add(new Vector2Int(0, -boardCoord.y));
 
                 if (includeDiagonalConnections)
                 {
-                    AddRingToRingConnections(worldCoord);
+                    AddRingToRingConnections(boardCoord);
                 }
             }
             else //Middle of a side of the square ring
             {
                 //Edges on the same ring
-                if (worldCoord.x == 0)
+                if (boardCoord.x == 0)
                 {
-                    localCoordsForEdges.Add(new Vector3Int(1, 0, 0));
-                    localCoordsForEdges.Add(new Vector3Int(-1, 0, 0));
+                    results.Add(new Vector2Int(1 * ring, 0));
+                    results.Add(new Vector2Int(-1 * ring, 0));
                 }
-                else if (worldCoord.y == 0)
+                else if (boardCoord.y == 0)
                 {
-                    localCoordsForEdges.Add(new Vector3Int(0, 1, 0));
-                    localCoordsForEdges.Add(new Vector3Int(0, -1, 0));
+                    results.Add(new Vector2Int(0, 1 * ring));
+                    results.Add(new Vector2Int(0, -1 * ring));
                 }
 
                 //Edges between rings
-                AddRingToRingConnections(worldCoord);
+                AddRingToRingConnections(boardCoord);
             }
-            return localCoordsForEdges;
+            return results;
 
-            void AddRingToRingConnections(Vector3Int worldCoord)
+            void AddRingToRingConnections(Vector2Int boardCoord)
             {
-                //Handle lower rings
-                if (includeCenterNode && lowestRingIndex == worldCoord.z)
+                int deltaX = boardCoord.x == 0 ? 0 : (int)Mathf.Sign(boardCoord.x);
+                int deltaY = boardCoord.y == 0 ? 0 : (int)(Mathf.Sign(boardCoord.y));
+
+                //Connection to outer ring
+                if (lowestRingIndex < ring)
                 {
-                    localCoordsForEdges.Add(-worldCoord);
-                }
-                else if (lowestRingIndex < worldCoord.z)
-                {
-                    localCoordsForEdges.Add(new Vector3Int(0, 0, -1));
+                    results.Add(new Vector2Int(-deltaX, -deltaY));
                 }
 
-                //Handle upper rings
-                if (worldCoord.z < highestRingIndex)
+                //Connection to inner ring
+                if (ring < highestRingIndex)
                 {
-                    localCoordsForEdges.Add(new Vector3Int(0, 0, 1));
+                    results.Add(new Vector2Int(deltaX, deltaY));
                 }
             }
 
-            bool IsCornerNode(Vector3Int worldCoord)
+            bool IsCornerNode(Vector2Int boardCoord)
             {
-                if (Mathf.Abs(worldCoord.x) - Mathf.Abs(worldCoord.y) == 0) return true;
+                if (Mathf.Abs(boardCoord.x) - Mathf.Abs(boardCoord.y) == 0) return true;
                 else return false;
             }
         }
@@ -189,7 +188,7 @@ namespace NineMensMorris
             List<HashSet<Node>> edgeNodeSets = new();
             foreach (Node node in nodeMap.Values)
             {
-                foreach (Vector3Int edgeDirection in node.EdgeDirections)
+                foreach (Vector2Int edgeDirection in node.EdgeDirections)
                 {
                     HashSet<Node> edgeNodeSet = new()
                     {
@@ -213,7 +212,7 @@ namespace NineMensMorris
             }
         }
 
-        private Node GetNode(Vector3Int coordinate)
+        private Node GetNode(Vector2Int coordinate)
         {
             try 
             {
@@ -228,7 +227,7 @@ namespace NineMensMorris
         public List<Node> GetConnectingNodes(Node node)
         {
             List<Node> result = new();
-            foreach (Vector3Int edge in node.EdgeDirections)
+            foreach (Vector2Int edge in node.EdgeDirections)
             {
                 Node connectingNode = GetNode(edge + node.BoardCoord);
                 if (connectingNode != null) result.Add(connectingNode);
@@ -259,7 +258,7 @@ namespace NineMensMorris
             }
 
             //Check each connecting node to target node. For each direction 1 mill could be found.
-            foreach (Vector3Int direction in firstNode.EdgeDirections)
+            foreach (Vector2Int direction in firstNode.EdgeDirections)
             {
                 Node secondNode = GetNode(firstNode.BoardCoord + direction);
 
@@ -278,13 +277,13 @@ namespace NineMensMorris
                 }
 
                 //Find the rest of connecting tokens in the direction of the edge
-                Vector3Int currentDirection = direction;
+                Vector2Int currentDirection = direction;
                 Node lastValidNode = secondNode;
                 bool reversedDirection = false; //We will reverse direction once, because our first node could have been in the middle of a mill.
 
                 for (int i = 0; i < numOfTokensForMill - 2; i++) // -2 because the first node and second node are already added.
                 {
-                    Vector3Int coordinateToCheck = lastValidNode.BoardCoord + currentDirection;
+                    Vector2Int coordinateToCheck = lastValidNode.BoardCoord + currentDirection;
                     Node node = GetNode(coordinateToCheck);
 
                     if (NodeHasFriendlyToken(node))

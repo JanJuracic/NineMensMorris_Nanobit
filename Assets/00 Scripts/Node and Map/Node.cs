@@ -7,9 +7,9 @@ namespace NineMensMorris
 {
     public class Node
     {
-        public readonly Vector3Int BoardCoord;
+        public readonly Vector2Int BoardCoord;
         public readonly Vector3 LocalPos;
-        private readonly List<Vector3Int> edgeDirections;
+        private readonly List<Vector2Int> edgeDirections;
         private readonly BoardManager boardManager;
 
         //Associated Monobehaviours
@@ -17,11 +17,11 @@ namespace NineMensMorris
         Token myToken;
 
         //Properties
-        public List<Vector3Int> EdgeDirections => new(edgeDirections);
+        public List<Vector2Int> EdgeDirections => new(edgeDirections);
         public NodeMono NodeMono => myNodeMono;
         public Token Token => myToken;
 
-        public Node(Vector3Int coord, Vector3 localPos, List<Vector3Int> localEdgeDirections, BoardManager manager)
+        public Node(Vector2Int coord, Vector3 localPos, List<Vector2Int> localEdgeDirections, BoardManager manager)
         {
             BoardCoord = coord;
             boardManager = manager;
