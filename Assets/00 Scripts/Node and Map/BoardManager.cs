@@ -244,6 +244,13 @@ namespace NineMensMorris
                 .ToList();
         }
 
+        public List<Node> GetAllFullNodes()
+        {
+            return nodeMap.Values
+                .Where (n => n.Token != null)
+                .ToList();
+        }
+
         public List<Node> GetAllPlayerTokenNodes(PlayerData targetPlayer)
         {
             return GetAllNodes()

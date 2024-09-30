@@ -3,7 +3,7 @@ using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor.Experimental.GraphView;
+using UnityEngine.UIElements;
 
 namespace NineMensMorris
 {
@@ -95,6 +95,13 @@ namespace NineMensMorris
             name = PhaseName.AddTokenFromSupply;
         }
 
+        public override void Enter()
+        {
+            List<Node> emptyNodes = gm.Board
+                .GetAllEmptyNodes();
+            gm.BatchAnim.MarkValidNodesForMovement(emptyNodes);
+        }
+
         public override void EvaluateNodeClicked(Node node)
         {
             if (node.Token == null)
@@ -147,7 +154,7 @@ namespace NineMensMorris
                 emptyNodesForMovement.Clear();
             }
 
-            gm.BatchAnim.MarkValidNodesForMovement(emptyNodesForMovement);
+            gm.BatchAnim.MarkValidTokenNodesForSelection(tokenNodesForSelection, true);
         }
 
         public override void EvaluateNodeClicked(Node node)
@@ -192,11 +199,15 @@ namespace NineMensMorris
             }
 
             nodeWithFriendlyToken = selectedNode;
-            //TODO: friendly node selected animation
+            //Handle visual
+            gm.BatchAnim.MarkSelectedTokenNode(selectedNode);
 
             if (PlayerCanFly() == false)
             {
-                emptyNodesForMovement = gm.Board.GetConnectingNodes(selectedNode);
+                emptyNodesForMovement = gm.Board
+                    .GetConnectingNodes(selectedNode)
+                    .Where(n => n.Token == null)
+                    .ToList();
                 gm.BatchAnim.MarkValidNodesForMovement(emptyNodesForMovement);
             }
         }
@@ -293,8 +304,7 @@ namespace NineMensMorris
                 validNodesForDestruction = enemyNodesOutsideMills;
             }
 
-
-            Debug.Log($"Nodes in mill: {enemyNodesInMills.Count}, Total nodes: {allEnemyNodes.Count}. Valid tokens for destruction: {validNodesForDestruction.Count}.");
+            gm.BatchAnim.MarkValidTokenNodesForSelection(validNodesForDestruction, false);
         }
 
         public override void EvaluateNodeClicked(Node node)
@@ -317,6 +327,12 @@ namespace NineMensMorris
             {
                 TriggerInvalidNodeAnimation(node);
             }
+        }
+
+        public override void Exit()
+        {
+            validNodesForDestruction.Clear();
+            gm.BatchAnim.MarkValidTokenNodesForSelection(validNodesForDestruction, false);
         }
 
         private void DestroyTokenOnNode(Node node)

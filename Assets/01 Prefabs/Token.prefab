@@ -55,7 +55,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 6a44766ef3f120547be71a021f562760, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -134,6 +134,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   tokenVisual: {fileID: 8633005452528839611}
+  outlineVisual: {fileID: 4398277102332822455}
   shadowVisual: {fileID: 8230003106188590970}
   slideCurve:
     serializedVersion: 2
@@ -213,6 +214,15 @@ MonoBehaviour:
     m_RotationOrder: 4
   flyHeightToLengthRatio: 0.3
   flySpeedPerSecond: 15
+  destroyDur: 1
+  shakeStrength: 0.1
+  shakeFrequency: 23.4
+  defaultFriendly: {r: 1, g: 1, b: 1, a: 0.5019608}
+  hoveredFriendly: {r: 0.5411765, g: 0.6901961, b: 0.37647063, a: 0.69803923}
+  selectedFriendly: {r: 0.5411765, g: 0.6901961, b: 0.37647063, a: 1}
+  defaultEnemy: {r: 1, g: 1, b: 1, a: 0.5019608}
+  hoveredEnemy: {r: 0.5019608, g: 0.28627452, b: 0.227451, a: 0.69803923}
+  selectedEnemy: {r: 0.5019608, g: 0.28627452, b: 0.227451, a: 1}
 --- !u!1 &6032588201418724725
 GameObject:
   m_ObjectHideFlags: 0
@@ -310,7 +320,7 @@ GameObject:
   - component: {fileID: 6034535836237159304}
   - component: {fileID: 4398277102332822455}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: OutlineVisual
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -338,7 +348,7 @@ SpriteRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7359827538984598160}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 0
   m_ReceiveShadows: 0
   m_DynamicOccludee: 1
@@ -353,7 +363,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9dfc825aed78fcd4ba02077103263b40, type: 2}
+  - {fileID: 2100000, guid: 6a44766ef3f120547be71a021f562760, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -375,7 +385,7 @@ SpriteRenderer:
   m_SortingLayer: 3
   m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: d5804dae3fc6ced4ca33a3ccf5a8ef11, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

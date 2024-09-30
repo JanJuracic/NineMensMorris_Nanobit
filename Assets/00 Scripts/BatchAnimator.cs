@@ -7,11 +7,29 @@ public class BatchAnimator : MonoBehaviour
 {
     [SerializeField] BoardManager bm;
 
-    public void MarkValidNodesForMovement(List<Node> validNNodes)
+    public void MarkValidNodesForMovement(List<Node> validNodes)
     {
         foreach (Node node in bm.GetAllNodes())
         {
-            node.Mono.UpdateIsUsable(validNNodes.Contains(node));
+            bool nodeIsSelectable = validNodes.Contains(node);
+            node.Mono.UpdateNodeIsSelectable(nodeIsSelectable);
+        }
+    }
+
+    public void MarkValidTokenNodesForSelection(List<Node> validNodes, bool isFriendly)
+    {
+        foreach (Node node in bm.GetAllNodes())
+        {
+            bool tokenIsSelectable = validNodes.Contains(node);
+            node.Mono.UpdateTokenIsSelectable(tokenIsSelectable, isFriendly);
+        }
+    }
+
+    public void MarkSelectedTokenNode(Node selectedNode)
+    {
+        foreach (Node node in bm.GetAllFullNodes())
+        {
+            node.Token.HandleSelected(selectedNode == node);
         }
     }
 }

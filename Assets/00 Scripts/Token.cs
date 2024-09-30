@@ -3,6 +3,7 @@ using NUnit.Framework.Constraints;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class Token : MonoBehaviour
 {
@@ -11,7 +12,10 @@ public class Token : MonoBehaviour
 
     [Header("Components")]
     [SerializeField] SpriteRenderer tokenVisual;
+    [SerializeField] SpriteRenderer outlineVisual;
     [SerializeField] SpriteRenderer shadowVisual;
+
+    [Header("VISUALS")]
 
     [Header("Movement Animation Settings")]
     [Header("Slide")]
@@ -22,6 +26,26 @@ public class Token : MonoBehaviour
     [SerializeField] AnimationCurve flyCurve;
     [SerializeField][Range(0.1f, 1f)] float flyHeightToLengthRatio = 0.5f;
     [SerializeField][Range(12, 20f)] float flySpeedPerSecond = 15f;
+
+    [Header("Destroy")]
+    [SerializeField][Range(0.1f, 3f)] float destroyDur;
+    [SerializeField][Range(0.1f, 1f)] private float shakeStrength = 0.2f;
+    [SerializeField][Range(10, 30f)] private float shakeFrequency = 10.0f;
+
+
+    [Header("Outline Colors")]
+    [Header("Friendly")]
+    [SerializeField] Color defaultFriendly;
+    [SerializeField] Color hoveredFriendly;
+    [SerializeField] Color selectedFriendly;
+    [Header("Enemy")]
+    [SerializeField] Color defaultEnemy;
+    [SerializeField] Color hoveredEnemy;
+    [SerializeField] Color selectedEnemy;
+
+    bool isSelectable = false;
+    bool isSelected = false;
+    bool isFriendly = true;
 
     //Properties
     public PlayerData Player => player;
@@ -37,8 +61,53 @@ public class Token : MonoBehaviour
     {
         manager.HandleTokenDestroyed(this);
 
-        Destroy(gameObject);
-        //Do animation;
+        StartCoroutine(Co_Destroy());
+    }
+
+    public void SetSelectabalityAndFriendliness(bool selectable, bool friendly)
+    {
+        isSelectable = selectable;
+        isFriendly = friendly;
+        outlineVisual.enabled = isSelectable;
+
+        //Handle visuals for selectables
+        if (isSelectable)
+        {
+            if (friendly) outlineVisual.color = defaultFriendly;
+            else outlineVisual.color = defaultEnemy;
+        }
+    }
+
+    public void HandleSelected(bool isSelected)
+    {
+        this.isSelected = isSelected;
+
+        if (isSelected)
+        {
+            if (isFriendly) outlineVisual.color = selectedFriendly;
+            else outlineVisual.color = selectedEnemy;
+        }
+        else
+        {
+            if (isFriendly) outlineVisual.color = defaultFriendly;
+            else outlineVisual.color = defaultEnemy;
+        }
+    }
+
+    public void HandleHovered(bool isHovered)
+    {
+        if (isSelected) return;
+
+        if (isHovered)
+        {
+            if (isFriendly) outlineVisual.color = hoveredFriendly;
+            else outlineVisual.color = hoveredEnemy;
+        } 
+        else
+        {
+            if (isFriendly) outlineVisual.color = defaultFriendly;
+            else outlineVisual.color = defaultEnemy;
+        }
     }
 
     public void SlideTo(Node node)
@@ -68,6 +137,44 @@ public class Token : MonoBehaviour
                 transform.position = targetTr.position;
                 break;
             }
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator Co_Destroy()
+    {
+        shadowVisual.enabled = false;
+        outlineVisual.enabled = false;
+
+        Material mat = tokenVisual.material;
+        Vector3 localPos = transform.localPosition;
+
+        float timeElapsed = 0f;
+        while (true)
+        {
+            //Handle growing
+            transform.localScale = Vector3.one + (Vector3.one * (timeElapsed / destroyDur));
+
+            //Handle shaking
+            float xOffset = Mathf.PerlinNoise(Time.time * shakeFrequency, 0.0f) * 2.0f - 1.0f;
+            float yOffset = Mathf.PerlinNoise(0.0f, Time.time * shakeFrequency) * 2.0f - 1.0f;
+            Vector3 offset = new Vector3(xOffset, yOffset, 0);
+
+            transform.localPosition = localPos + (offset * shakeStrength);
+            transform.localPosition = localPos + (offset * shakeStrength);
+            
+            //Handle fading
+            float fadeAmount = 1 - (timeElapsed / destroyDur);
+            mat.SetFloat("_Fade", fadeAmount);
+
+            if (timeElapsed > destroyDur )
+            {
+                mat.SetFloat("_Fade", 0f);
+                Destroy(gameObject);
+            }
+
+            timeElapsed += Time.deltaTime;
 
             yield return null;
         }

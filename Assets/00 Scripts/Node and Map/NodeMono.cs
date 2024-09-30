@@ -9,7 +9,7 @@ namespace NineMensMorris
     [RequireComponent(typeof(Collider2D))]
     public class NodeMono : MonoBehaviour, IPointerClickHandler, IPointerEnterHandler, IPointerExitHandler
     {
-        Node myNode;
+        Node node;
 
         [Header("Components")]
         [SerializeField] SpriteMask holeMask;
@@ -23,11 +23,13 @@ namespace NineMensMorris
 
         Vector3 localPos;
         List<EdgeRenderer> edgeRenderers = new();
-        bool isUsable = true;
 
-        public void Setup(Node node)
+        bool nodeIsSelectable = false;
+        bool tokenIsSelectable = false;
+
+        public void Setup(Node myNode)
         {
-            myNode = node;
+            node = myNode;
             name = $"NodeMono: {node.BoardCoord}";
             localPos = transform.localPosition;
         }
@@ -39,25 +41,56 @@ namespace NineMensMorris
 
         public void OnPointerClick(PointerEventData eventData)
         {
-            myNode.HandleNodeClicked();
+            node.HandleNodeClicked();
         }
 
         public void OnPointerEnter(PointerEventData eventData)
         {
-            if (isUsable == false) return;
-            holeMask.enabled = false;
+            if (nodeIsSelectable == false && tokenIsSelectable == false) return;
+
+            //Handle node visuals
+            holeMask.transform.localScale = Vector3.one * 0.5f;
+            holeMask.enabled = true;
+
+            //Handle token visuals
+            if (node.Token != null)
+            {
+                node.Token.HandleHovered(true);
+            }
         }
 
         public void OnPointerExit(PointerEventData eventData)
         {
-            if (isUsable == false) return;
+            if (nodeIsSelectable == false && tokenIsSelectable == false) return;
+
+            //Handle node visuals
+            holeMask.transform.localScale = Vector3.one;
             holeMask.enabled = true;
+
+            //Handle token visuals
+            if (node.Token != null)
+            {
+                node.Token.HandleHovered(false);
+            }
         }
 
-        public void UpdateIsUsable(bool isUsable)
+        public void UpdateNodeIsSelectable(bool nodeIsSelectable)
         {
-            this.isUsable = isUsable;
-            holeMask.enabled = isUsable;
+            this.nodeIsSelectable = nodeIsSelectable;
+
+            //Handle node visuals
+            holeMask.enabled = nodeIsSelectable;
+        }
+
+        public void UpdateTokenIsSelectable(bool tokenIsSelectable, bool isFriendly)
+        {
+            this.tokenIsSelectable = tokenIsSelectable;
+
+            //Handle token visuals
+            if (node.Token != null)
+            {
+                node.Token.SetSelectabalityAndFriendliness(tokenIsSelectable, isFriendly);
+            }
         }
 
         public void Shake()
