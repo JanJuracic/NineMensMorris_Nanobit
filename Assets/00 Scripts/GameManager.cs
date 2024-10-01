@@ -2,6 +2,7 @@ using NineMensMorris;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Hierarchy;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
@@ -11,6 +12,11 @@ public class GameManager : MonoBehaviour
     [Header("Required Managers")]
     [SerializeField] BoardManager boardManager;
     [SerializeField] BatchAnimator batchAnim;
+    [SerializeField] InfoTextController infoText;
+    [SerializeField] CameraSizeController cameraSizeController;
+
+    [Header("Prefabs")]
+    [SerializeField] PlayerTokensManager playerTokenManager;
 
     [Header("Player Data and Supply")]
     [SerializeField] PlayerData playerOne;
@@ -25,11 +31,12 @@ public class GameManager : MonoBehaviour
 
     List<HashSet<Node>> currentMills = new();
 
-
     //PROPERTIES, used by the state machine
     public BoardAndRulesData BRData => boardAndRules;
     public BoardManager Board => boardManager;
     public BatchAnimator BatchAnim => batchAnim;
+    public CameraSizeController CamSize => cameraSizeController;
+    public InfoTextController InfoText => infoText;
     public PlayerData CurrentPlayer { get; private set; }
     public PlayerData EnemyPlayer => CurrentPlayer == playerOne ? playerTwo : playerOne;
     public int NewMillsCreatedLastAction { get; set; }
@@ -80,10 +87,21 @@ public class GameManager : MonoBehaviour
         CurrentPlayer = CurrentPlayer == playerOne ? playerTwo : playerOne;
     }
 
-    public void SetupTokenManagers()
+    public void SetupTokenManagers(float offset)
     {
-        playerOne.TokenManager.InstantiateTokens(boardAndRules.TokensPerPlayer);
-        playerTwo.TokenManager.InstantiateTokens(boardAndRules.TokensPerPlayer);
+        Vector3 p1Pos = (Vector3.left * offset) + transform.position;
+        var p1Tokens = Instantiate(playerTokenManager, p1Pos, transform.rotation, transform);
+        p1Tokens.SetupPlayerData(playerOne);
+
+        Vector3 p2Pos = (Vector3.right * offset) + transform.position;
+        var p2Tokens = Instantiate(playerTokenManager, p2Pos, transform.rotation, transform);
+        p2Tokens.SetupPlayerData(playerTwo);
+    }
+
+    public void InstantiateNewTokens()
+    {
+        playerOne.TokenManager.InstantiateNewTokens(boardAndRules.TokensPerPlayer);
+        playerTwo.TokenManager.InstantiateNewTokens(boardAndRules.TokensPerPlayer);
     }
 
     public HashSet<Node> GetAllNodesInMills(PlayerData targetPlayer)

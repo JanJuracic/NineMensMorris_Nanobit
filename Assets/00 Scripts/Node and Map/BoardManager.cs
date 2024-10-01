@@ -24,22 +24,13 @@ namespace NineMensMorris
         [Header("Unity Events")]
         [SerializeField] UnityEvent<Node> OnNodeClicked;
 
+        BoardAndRulesData currentData;
 
         #region NodeMap Generation
 
         private void CreateNewNodesAndMap(BoardAndRulesData data)
         {
             nodeMap.Clear();
-
-            List<GameObject> objectsToDestroy = new();
-            foreach (Transform child in transform)
-            {
-                objectsToDestroy.Add(child.gameObject);
-            }
-            foreach (GameObject child in objectsToDestroy)
-            {
-                Destroy(child);
-            }
 
             //Handle center node
             if (data.IncludeCenterNode)
@@ -166,6 +157,7 @@ namespace NineMensMorris
 
         public void SetupBoard(BoardAndRulesData data)
         {
+            currentData = data;
             CreateNewNodesAndMap(data);
 
             //Create NodeMonos
@@ -207,6 +199,16 @@ namespace NineMensMorris
                 er.SetupEndNodes(nodes[0].Mono, nodes[1].Mono);
                 er.UpdateLineEndpoints();
             }
+        }
+
+        public float GetBoardHeight()
+        {
+            return ringOffset * currentData.RingCount;
+        }
+
+        public float GetOffsetForTokenManagers()
+        {
+            return ringOffset * (currentData.RingCount + 1); 
         }
 
         private Node GetNode(Vector2Int coordinate)
