@@ -3,6 +3,7 @@ using NUnit.Framework.Constraints;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering;
 using static UnityEngine.GraphicsBuffer;
 
 public class Token : MonoBehaviour
@@ -11,6 +12,7 @@ public class Token : MonoBehaviour
     PlayerTokensManager manager;
 
     [Header("Components")]
+    [SerializeField] SortingGroup sortingGroup;
     [SerializeField] SpriteRenderer tokenVisual;
     [SerializeField] SpriteRenderer outlineVisual;
     [SerializeField] SpriteRenderer shadowVisual;
@@ -18,6 +20,12 @@ public class Token : MonoBehaviour
     [Header("VISUALS")]
 
     [Header("Movement Animation Settings")]
+
+    [Header("Fall")]
+    [SerializeField] AnimationCurve fallCurve;
+    [SerializeField][Range(12, 20f)] float fallSpeedPerSecond = 15f;
+    [SerializeField][Range(3, 10f)] float fallStartHeight = 3f;
+
     [Header("Slide")]
     [SerializeField] AnimationCurve slideCurve;
     [SerializeField][Range(1f, 3f)] float slideRelativeSpeed = 1f;
@@ -50,18 +58,16 @@ public class Token : MonoBehaviour
     //Properties
     public PlayerData Player => player;
 
-    public void Setup(PlayerData playerData, PlayerTokensManager tokenManager)
+    public void SetupData(PlayerData playerData, PlayerTokensManager tokenManager)
     {
         player = playerData;
         tokenVisual.color = player.Color;
         manager = tokenManager;
     }
 
-    public void DestroyToken()
+    public void SetSortingOrder(int order)
     {
-        manager.HandleTokenDestroyed(this);
-
-        StartCoroutine(Co_Destroy());
+        sortingGroup.sortingOrder = order;
     }
 
     public void SetSelectabalityAndFriendliness(bool selectable, bool friendly)
@@ -120,6 +126,50 @@ public class Token : MonoBehaviour
         StartCoroutine(Co_FlyTo(node.Mono.transform));
     }
 
+    public void DestroyToken()
+    {
+        manager.HandleTokenDestroyed(this);
+        StartCoroutine(Co_Destroy());
+    }
+
+    private IEnumerator Co_Fall()
+    {
+        shadowVisual.enabled = false;
+        tokenVisual.transform.localPosition = Vector3.up * fallStartHeight;
+        Color tokenTransparent = new Color(tokenVisual.color.r, tokenVisual.color.g, tokenVisual.color.b, 0);
+        Color tokenOpaque = new Color(tokenVisual.color.r, tokenVisual.color.g, tokenVisual.color.b, 1);
+        tokenVisual.color = tokenTransparent;
+
+        float t = 0f;
+        float distanceCrossed = 0f;
+        
+        while (true)
+        {
+            distanceCrossed = Mathf.MoveTowards(distanceCrossed, fallStartHeight, fallSpeedPerSecond * Time.deltaTime);
+            t = distanceCrossed / fallStartHeight;
+
+            //Move token visual downwards along curve
+            float animationLerpValue = fallCurve.Evaluate(t);
+            float tokenVisHeight = Mathf.LerpUnclamped(fallStartHeight, 0, animationLerpValue);
+            tokenVisual.transform.localPosition = new Vector3
+                (tokenVisual.transform.localPosition.x, 
+                tokenVisHeight, 
+                tokenVisual.transform.localPosition.z);
+
+            //Move alpha from transparent to opaque
+            tokenVisual.color = Color.Lerp(tokenTransparent, tokenOpaque, t);
+
+            if (t > 0.995f)
+            {
+                shadowVisual.enabled = true;
+                tokenVisual.transform.localPosition = Vector3.zero;
+                break;
+            }
+
+            yield return null;
+        }
+    }
+
     private IEnumerator Co_SlideTo(Transform targetTr)
     {
         Vector3 startPos = transform.position;  
@@ -135,6 +185,40 @@ public class Token : MonoBehaviour
             if (t > 0.995f)
             {
                 transform.position = targetTr.position;
+                break;
+            }
+
+            yield return null;
+        }
+    }
+
+    private IEnumerator Co_FlyTo(Transform targetTr)
+    {
+        Vector3 startPos = transform.position;
+        Vector3 visualOriginLocPos = tokenVisual.transform.localPosition;
+
+        float distanceToTarget = (startPos - targetTr.position).magnitude;
+        float flyHeight = distanceToTarget * flyHeightToLengthRatio;
+
+        float t = 0f;
+        float distanceCrossed = 0f;
+        while (true)
+        {
+            distanceCrossed = Mathf.MoveTowards(distanceCrossed, distanceToTarget, flySpeedPerSecond * Time.deltaTime);
+            t = distanceCrossed / distanceToTarget;
+
+            //Move token
+            transform.position = Vector3.Lerp(startPos, targetTr.position, t);
+
+            //Move token visual upwards along curve
+            float animationLerpValue = flyCurve.Evaluate(t);
+            float tokenVisHeight = Mathf.LerpUnclamped(0, flyHeight, animationLerpValue);
+            tokenVisual.transform.localPosition = new Vector3(visualOriginLocPos.x, tokenVisHeight, visualOriginLocPos.z);
+
+            if (t > 0.995f)
+            {
+                transform.position = targetTr.position;
+                tokenVisual.transform.localPosition = visualOriginLocPos;
                 break;
             }
 
@@ -180,37 +264,5 @@ public class Token : MonoBehaviour
         }
     }
 
-    private IEnumerator Co_FlyTo(Transform targetTr)
-    {
-        Vector3 startPos = transform.position;
-        Vector3 visualOriginLocPos = tokenVisual.transform.localPosition;
 
-        float distanceToTarget = (startPos - targetTr.position).magnitude;
-        float flyHeight = distanceToTarget * flyHeightToLengthRatio;
-
-        float t = 0f;
-        float distanceCrossed = 0f;
-        while (true)
-        {
-            distanceCrossed = Mathf.MoveTowards(distanceCrossed, distanceToTarget, flySpeedPerSecond * Time.deltaTime);
-            t = distanceCrossed / distanceToTarget;
-
-            //Move token
-            transform.position = Vector3.Lerp(startPos, targetTr.position, t);
-
-            //Move token visual upwards along curve
-            float animationLerpValue = flyCurve.Evaluate(t);
-            float tokenVisHeight = Mathf.LerpUnclamped(0, flyHeight, animationLerpValue);
-            tokenVisual.transform.localPosition = new Vector3(visualOriginLocPos.x, tokenVisHeight, visualOriginLocPos.z);
-
-            if (t > 0.995f)
-            {
-                transform.position = targetTr.position;
-                tokenVisual.transform.localPosition = visualOriginLocPos;
-                break;
-            }
-
-            yield return null;
-        }
-    }
 }
