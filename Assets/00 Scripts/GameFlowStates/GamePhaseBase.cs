@@ -100,6 +100,8 @@ namespace NineMensMorris
             List<Node> emptyNodes = gm.Board
                 .GetAllEmptyNodes();
             gm.BatchAnim.MarkValidNodesForMovement(emptyNodes);
+
+            gm.InfoText.WritePermanentText($"{gm.CurrentPlayer}, add a token to the board.");
         }
 
         public override void EvaluateNodeClicked(Node node)
@@ -117,6 +119,8 @@ namespace NineMensMorris
             else
             {
                 TriggerInvalidNodeAnimation(node);
+
+                gm.InfoText.WriteTempText($"Pick an empty node!");
             }
         }
     }
@@ -155,6 +159,7 @@ namespace NineMensMorris
             }
 
             gm.BatchAnim.MarkValidTokenNodesForSelection(tokenNodesForSelection, true);
+            gm.InfoText.WritePermanentText($"{gm.CurrentPlayer}, choose a token to move, then move it.");
         }
 
         public override void EvaluateNodeClicked(Node node)
@@ -195,6 +200,7 @@ namespace NineMensMorris
             if (tokenNodesForSelection.Contains(selectedNode) == false)
             {
                 TriggerInvalidNodeAnimation(selectedNode);
+                gm.InfoText.WriteTempText("Select your own piece!");
                 return;
             }
 
@@ -217,6 +223,7 @@ namespace NineMensMorris
             if (emptyNodesForMovement.Contains(targetNode) == false)
             {
                 TriggerInvalidNodeAnimation(targetNode);
+                gm.InfoText.WriteTempText($"You cannot move there!");
                 return;
             }
 
@@ -305,6 +312,8 @@ namespace NineMensMorris
             }
 
             gm.BatchAnim.MarkValidTokenNodesForSelection(validNodesForDestruction, false);
+            gm.InfoText.WritePermanentText($"{gm.CurrentPlayer}, pick one of {gm.EnemyPlayer}'s tokens to destroy!");
+            gm.InfoText.WriteTempText($"Well done, {gm.CurrentPlayer}, you have built a mill!");
         }
 
         public override void EvaluateNodeClicked(Node node)
@@ -326,6 +335,7 @@ namespace NineMensMorris
             else
             {
                 TriggerInvalidNodeAnimation(node);
+                gm.InfoText.WriteTempText($"That's not {gm.EnemyPlayer}'s token!");
             }
         }
 
@@ -354,6 +364,7 @@ namespace NineMensMorris
         public override void Enter()
         {
             gm.CurrentPlayerWins();
+            gm.InfoText.WritePermanentText($"{gm.CurrentPlayer} wins!");
         }
     }
 
@@ -367,6 +378,7 @@ namespace NineMensMorris
         public override void Enter()
         {
             gm.DrawGame();
+            gm.InfoText.WritePermanentText($"Draw!");
         }
     }
 }
