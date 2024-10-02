@@ -24,7 +24,7 @@ public class ModalWindowController : MonoBehaviour
         OpenCloseAnimation(isOpen);
     }
 
-    public void OpenCloseAnimation(bool opening)
+    private void OpenCloseAnimation(bool opening)
     {
         if (opening) animator.Play(OpenClip.name);
         else animator.Play(CloseClip.name);
@@ -52,4 +52,5 @@ public class ModalWindowController : MonoBehaviour
     }
 
     #endregion
+
 }

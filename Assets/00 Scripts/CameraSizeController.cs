@@ -6,7 +6,7 @@ public class CameraSizeController : MonoBehaviour
     [SerializeField] Camera cam;
 
     [Header("Settings")]
-    [SerializeField][Range(0f, 3f)] float sizeOffset;
+    [SerializeField][Range(1f, 3f)] float sizeFactor = 1.2f;
 
     float targetHeight;
     float targetWidth;
@@ -24,9 +24,9 @@ public class CameraSizeController : MonoBehaviour
         this.targetWidth = targetWidth;
 
         float aspectRatio = cam.aspect;
-        float heightBasedSize = targetHeight + sizeOffset; 
-        float widthBasedSize = (targetWidth + sizeOffset) / aspectRatio;
-        cam.orthographicSize = Mathf.Max(heightBasedSize, widthBasedSize);
+        float heightBasedSize = targetHeight; 
+        float widthBasedSize = targetWidth / aspectRatio;
+        cam.orthographicSize = Mathf.Max(heightBasedSize * sizeFactor, widthBasedSize * sizeFactor);
 
     }
 }

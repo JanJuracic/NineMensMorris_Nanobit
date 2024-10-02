@@ -12,5 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3be92ab67df828d409840b1dec3d02f9, type: 3}
   m_Name: PlayerTwo
   m_EditorClassIdentifier: 
+  defaultName: P2
+  defaultColorIndex: 1
   playerName: P2
-  color: {r: 0.29411766, g: 0.5019608, b: 0.79215693, a: 1}
+  color: {r: 0.82745105, g: 0.627451, b: 0.40784317, a: 1}
+  colorIndex: 1
+  ID: 2

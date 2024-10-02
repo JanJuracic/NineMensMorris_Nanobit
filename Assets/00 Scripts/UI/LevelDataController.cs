@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
+using System;
 
 public class LevelDataController : MonoBehaviour
 {
@@ -28,6 +29,12 @@ public class LevelDataController : MonoBehaviour
         int longestLineAcrossRings = isOn ? (rings * 2) + 1 : rings;
         int longestLine = Mathf.Max(3, longestLineAcrossRings);
         sliderMillTokens.SetSliderMax(longestLine);
+
+        //Do not allow more tokens than nodes;
+        int totalNodeNumber = toggleCenterNode.isOn ? (rings * 8) + 1 : rings * 8;
+        int tokensPerPlayerMax = totalNodeNumber / 2;
+        sliderTokensPerPlayer.SetSliderMax(tokensPerPlayerMax);
+
         UpdateData();
     }
 
@@ -36,6 +43,12 @@ public class LevelDataController : MonoBehaviour
         int longestLineAcrossRings = toggleCenterNode.isOn ? (rings * 2) + 1 : rings;
         int longestLine = Mathf.Max(3, longestLineAcrossRings);
         sliderMillTokens.SetSliderMax(longestLine);
+
+        //Do not allow more tokens than nodes;
+        int totalNodeNumber = toggleCenterNode.isOn ? (rings * 8) + 1 : rings * 8;
+        int tokensPerPlayerMax = totalNodeNumber / 2;
+        sliderTokensPerPlayer.SetSliderMax(tokensPerPlayerMax);
+
         UpdateData();
     }
 

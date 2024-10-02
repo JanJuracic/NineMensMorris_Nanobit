@@ -7,9 +7,10 @@ public class InfoTextController : MonoBehaviour
 {
     [Header("Components")]
     [SerializeField] TextMeshProUGUI display;
+
     [Header("Variables")]
     [SerializeField][Range(1f, 4f)] float tempTextDur;
-    [SerializeField][Range(0.02f, 0.2f)] float charWritingDelay;
+    [SerializeField][Range(0.005f, 0.2f)] float charWritingDelay;
 
     string permText;
     Coroutine currentCoroutine = null;
@@ -23,6 +24,8 @@ public class InfoTextController : MonoBehaviour
 
     public void WriteTempText(string text)
     {
+        if (text == display.text) return;
+
         if (currentCoroutine != null) StopCoroutine(currentCoroutine);
         currentCoroutine = StartCoroutine(Co_DisplayTemporaryText(text));
     }

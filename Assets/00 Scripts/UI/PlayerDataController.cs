@@ -4,70 +4,60 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerDataController : MonoBehaviour
-{
-    [Header("Data")]
-    [SerializeField] PlayerData myPlayer;
-    [SerializeField] PlayerData otherPlayer;
-
-    [Header("Components")]
-    [SerializeField] TMP_InputField nameInput;
-    [SerializeField] TMP_Dropdown colorDropdown;
-    [SerializeField] Image tokenImage;
-
-    private void Awake()
+namespace NineMensMorris
+{ 
+    public class PlayerDataController : MonoBehaviour
     {
-        nameInput.text = myPlayer.Name;
-        colorDropdown.value = GetCurrentColorIndex();
-        UpdateTokenImageColorToCurrent();
-    }
+        [Header("Data")]
+        [SerializeField] PlayerData myPlayer;
+        [SerializeField] PlayerData otherPlayer;
 
-    public void AttemptToChangeName(string newName)
-    {
-        newName = newName.Trim();
-        if (newName == otherPlayer.Name)
+        [Header("Components")]
+        [SerializeField] TMP_InputField nameInput;
+        [SerializeField] TMP_Dropdown colorDropdown;
+        [SerializeField] Image tokenImage;
+
+        private void Awake()
         {
+            myPlayer.LoadPlayerDataFromPreferences();
             nameInput.text = myPlayer.Name;
+            colorDropdown.value = myPlayer.ColorIndex;
+            AttemptToChangeColor(myPlayer.ColorIndex);
         }
-        else
-        {
-            nameInput.text = newName;
-            myPlayer.UpdateName(newName);
-        }
-    }
 
-    public void AttemptToChangeColor(int choiceIndex)
-    {
-        Color newColor = colorDropdown.options[choiceIndex].color;
-        if (otherPlayer.Color == newColor)
+        public void AttemptToChangeName(string newName)
         {
-            colorDropdown.value = GetCurrentColorIndex();
-        }
-        else
-        {
-            myPlayer.UpdateColor(newColor);
-            UpdateTokenImageColorToCurrent();
-        }
-    }
-
-    private int GetCurrentColorIndex()
-    {
-        //Find previously set color index
-        int previousColorIndex = 0;
-        for (int i = 0; i < colorDropdown.options.Count; i++)
-        {
-            Color color = colorDropdown.options[i].color;
-            if (color == myPlayer.Color)
+            newName = newName.Trim();
+            if (newName == otherPlayer.Name)
             {
-                previousColorIndex = i;
-                break;
+                nameInput.text = myPlayer.Name;
+            }
+            else
+            {
+                nameInput.text = newName;
+                myPlayer.UpdateName(newName);
             }
         }
-        return previousColorIndex;
-    }
 
-    private void UpdateTokenImageColorToCurrent()
-    {
-        tokenImage.color = myPlayer.Color;
+        public void AttemptToChangeColor(int colorIndex)
+        {
+            Color newColor = colorDropdown.options[colorIndex].color;
+            if (otherPlayer.Color == newColor)
+            {
+                colorDropdown.value = myPlayer.ColorIndex;
+            }
+            else
+            {
+                myPlayer.UpdateColor(newColor, colorIndex);
+                UpdateTokenImageColorToCurrent();
+            }
+        }
+
+        private void UpdateTokenImageColorToCurrent()
+        {
+            tokenImage.color = myPlayer.Color;
+        }
     }
 }
+
+

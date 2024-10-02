@@ -15,6 +15,7 @@ public class CurrentLevelSetter : MonoBehaviour
     private void Awake()
     {
         PopulateDropdownWithLevelNames();
+        SetNewCurrentLevel(0);
     }
 
     private void PopulateDropdownWithLevelNames()

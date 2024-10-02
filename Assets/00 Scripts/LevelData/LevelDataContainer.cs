@@ -1,7 +1,4 @@
-using JetBrains.Annotations;
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 
 [CreateAssetMenu(menuName = "BoardAndRules/Container", fileName = "LevelDataContainer")]

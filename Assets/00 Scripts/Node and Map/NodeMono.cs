@@ -1,7 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using NineMensMorris;
 using UnityEngine.EventSystems;
 
 namespace NineMensMorris
@@ -41,6 +40,7 @@ namespace NineMensMorris
 
         public void OnPointerClick(PointerEventData eventData)
         {
+            if (eventData.button != 0) return;
             node.HandleNodeClicked();
         }
 
@@ -93,22 +93,23 @@ namespace NineMensMorris
             }
         }
 
-        public void Shake()
+        public void Shake(float strFactor = 1f, float durFactor = 1f)
         {
-            StartCoroutine(Co_Shake());
+            StartCoroutine(Co_Shake(strFactor, durFactor));
         }
 
-        private IEnumerator Co_Shake()
+        private IEnumerator Co_Shake(float strengthFactor, float durFactor)
         {
             float timeElapsed = 0f;
 
-            while (timeElapsed < shakeDur)
+            while (timeElapsed < shakeDur * durFactor)
             {
-                float xOffset = Mathf.PerlinNoise(Time.time * shakeFrequency, 0.0f) * 2.0f - 1.0f;
-                float yOffset = Mathf.PerlinNoise(0.0f, Time.time * shakeFrequency) * 2.0f - 1.0f;
+                float randomOffset = Random.Range(0f, 100f);
+                float xOffset = Mathf.PerlinNoise((randomOffset +Time.time) * shakeFrequency, 0.0f) * 2.0f - 1.0f;
+                float yOffset = Mathf.PerlinNoise(0.0f, (randomOffset + Time.time) * shakeFrequency) * 2.0f - 1.0f;
                 Vector3 offset = new Vector3(xOffset, yOffset, 0);
 
-                transform.localPosition = localPos + (offset * shakeStrength);
+                transform.localPosition = localPos + (offset * shakeStrength * strengthFactor);
                 foreach (EdgeRenderer edgeRenderer in edgeRenderers)
                 {
                     edgeRenderer.UpdateLineEndpoints();

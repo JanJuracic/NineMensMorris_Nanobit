@@ -1,9 +1,7 @@
-using NineMensMorris;
 using System.Collections;
 using UnityEngine;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEngine.UIElements;
 
 namespace NineMensMorris
 {
@@ -33,7 +31,6 @@ namespace NineMensMorris
 
         public void ChangeState(PhaseName nextState)
         {
-            Debug.Log(nextState);
             gm.ChangeState(nextState);
         }
 
@@ -42,11 +39,6 @@ namespace NineMensMorris
         public virtual void EvaluateNodeClicked(Node node) { }
 
         public virtual void Exit() { }
-
-        protected void TriggerInvalidNodeAnimation(Node node)
-        {
-            node.Mono.Shake();
-        }
     }
 
     public class LoadLevel : GamePhaseBase
@@ -61,6 +53,7 @@ namespace NineMensMorris
             gm.Board.SetupBoard(gm.LevelData); 
             gm.SetupTokenManagers(gm.Board.GetOffsetForTokenManagers());
             gm.InstantiateNewTokens();
+            gm.SetupPlayerInfos();
 
             //Update camera size
             float height = gm.Board.GetBoardHeight();
@@ -81,6 +74,10 @@ namespace NineMensMorris
         public override void Enter()
         {
             gm.SwitchCurrentPlayer();
+
+            //Update player info text
+            gm.CurrentPlayer.PlayerInfo.UpdateActive(true);
+            gm.EnemyPlayer.PlayerInfo.UpdateActive(false);
 
             //If all of player's tokens are on the board
             if (gm.CurrentPlayer.TokenManager.TokensInSupplyCount == 0)
@@ -108,6 +105,7 @@ namespace NineMensMorris
             gm.BatchAnim.MarkValidNodesForMovement(emptyNodes);
 
             gm.InfoText.WritePermanentText($"{gm.CurrentPlayer}, add a token to the board.");
+            gm.CurrentPlayer.PlayerInfo.UpdateInfoText("Adding Token to Board");
         }
 
         public override void EvaluateNodeClicked(Node node)
@@ -116,7 +114,7 @@ namespace NineMensMorris
             {
                 Token token = gm.CurrentPlayer.TokenManager.SendTopTokenToNode(node);
                 node.LinkToken(token);
-                gm.UpdateMillsAndSetNewMillCount(null, node, gm.CurrentPlayer);
+                gm.UpdateMillsAndGetNewMills(null, node, gm.CurrentPlayer);
 
                 token.FlyTo(node);
 
@@ -124,7 +122,7 @@ namespace NineMensMorris
             }
             else
             {
-                TriggerInvalidNodeAnimation(node);
+                gm.TriggerInvalidNodeFX(node);
 
                 gm.InfoText.WriteTempText($"Pick an empty node!");
             }
@@ -152,7 +150,8 @@ namespace NineMensMorris
             if (PlayerCanFly())
             {
                 tokenNodesForSelection = gm.Board.GetAllPlayerTokenNodes(gm.CurrentPlayer);
-                emptyNodesForMovement = gm.Board.GetAllEmptyNodes();
+
+                gm.CurrentPlayer.PlayerInfo.UpdateInfoText("Flying");
             }
             else
             {
@@ -161,9 +160,10 @@ namespace NineMensMorris
                     .Where(n => gm.Board.GetConnectingNodes(n).Count > 0)
                     .ToList();
 
-                emptyNodesForMovement.Clear();
+                gm.CurrentPlayer.PlayerInfo.UpdateInfoText("Sliding");
             }
 
+            gm.BatchAnim.MarkValidNodesForMovement(emptyNodesForMovement);
             gm.BatchAnim.MarkValidTokenNodesForSelection(tokenNodesForSelection, true);
             gm.InfoText.WritePermanentText($"{gm.CurrentPlayer}, choose a token to move, then move it.");
         }
@@ -199,19 +199,21 @@ namespace NineMensMorris
             tokenNodesForSelection.Clear();
             emptyNodesForMovement.Clear();
             moveComplete = false;
+
+            gm.BatchAnim.MarkValidNodesForMovement(emptyNodesForMovement);
+            gm.BatchAnim.MarkValidTokenNodesForSelection(tokenNodesForSelection, true);
         }
 
         private void AttemptSelectFriendlyTokenNode(Node selectedNode)
         {
             if (tokenNodesForSelection.Contains(selectedNode) == false)
             {
-                TriggerInvalidNodeAnimation(selectedNode);
+                gm.TriggerInvalidNodeFX(selectedNode);
                 gm.InfoText.WriteTempText("Select your own piece!");
                 return;
             }
 
             nodeWithFriendlyToken = selectedNode;
-            //Handle visual
             gm.BatchAnim.MarkSelectedTokenNode(selectedNode);
 
             if (PlayerCanFly() == false)
@@ -220,15 +222,20 @@ namespace NineMensMorris
                     .GetConnectingNodes(selectedNode)
                     .Where(n => n.Token == null)
                     .ToList();
-                gm.BatchAnim.MarkValidNodesForMovement(emptyNodesForMovement);
             }
+            else
+            {
+                emptyNodesForMovement = gm.Board.GetAllEmptyNodes();
+            }
+
+            gm.BatchAnim.MarkValidNodesForMovement(emptyNodesForMovement);
         }
 
         private void AttemptMoveTokenToNewNode(Node targetNode)
         {
             if (emptyNodesForMovement.Contains(targetNode) == false)
             {
-                TriggerInvalidNodeAnimation(targetNode);
+                gm.TriggerInvalidNodeFX(targetNode);
                 gm.InfoText.WriteTempText($"You cannot move there!");
                 return;
             }
@@ -242,7 +249,7 @@ namespace NineMensMorris
             if (PlayerCanFly()) token.FlyTo(targetNode);
             else token.SlideTo(targetNode);
 
-            gm.UpdateMillsAndSetNewMillCount(nodeWithFriendlyToken, targetNode, gm.CurrentPlayer);
+            gm.UpdateMillsAndGetNewMills(nodeWithFriendlyToken, targetNode, gm.CurrentPlayer);
 
             moveComplete = true;
         }
@@ -255,15 +262,20 @@ namespace NineMensMorris
 
     public class EvaluatePlayerMove : GamePhaseBase
     {
+        List<Node> newMillNodes;
+
         public EvaluatePlayerMove(GameManager gameManager) : base(gameManager) 
         {
             name = PhaseName.EvaluatePlayerMove;
+            newMillNodes = new();
         }
      
         public override void Enter()
         {
+            newMillNodes = gm.GetNodesInNewMills();
+
             //Player has made at least one mill and must destroy opponent's token
-            if (gm.NewMillsCreatedLastAction > 0)
+            if (newMillNodes.Count > 0)
             {
                 ChangeState(PhaseName.DestroyToken);
             }
@@ -286,7 +298,10 @@ namespace NineMensMorris
 
         public override void Exit()
         {
-            gm.NewMillsCreatedLastAction = 0;
+            gm.TriggerMillFXs(newMillNodes);
+
+            newMillNodes.Clear();
+            gm.ClearNewMills();
         }
     }
 
@@ -304,7 +319,7 @@ namespace NineMensMorris
         {
             HashSet<Node> allEnemyNodes = gm.Board.GetAllPlayerTokenNodes(gm.EnemyPlayer).ToHashSet();
 
-            HashSet<Node> enemyNodesInMills = gm.GetAllNodesInMills(gm.EnemyPlayer);
+            HashSet<Node> enemyNodesInMills = gm.GetAllNodesInMillsForPlayer(gm.EnemyPlayer);
             List<Node> enemyNodesOutsideMills = allEnemyNodes.Except(enemyNodesInMills).ToList();
 
             //If there are no enemy nodes outside mills, you can destroy any node
@@ -320,6 +335,7 @@ namespace NineMensMorris
             gm.BatchAnim.MarkValidTokenNodesForSelection(validNodesForDestruction, false);
             gm.InfoText.WritePermanentText($"{gm.CurrentPlayer}, pick one of {gm.EnemyPlayer}'s tokens to destroy!");
             gm.InfoText.WriteTempText($"Well done, {gm.CurrentPlayer}, you have built a mill!");
+            gm.CurrentPlayer.PlayerInfo.UpdateInfoText("Destroying Enemy Token");
         }
 
         public override void EvaluateNodeClicked(Node node)
@@ -340,14 +356,30 @@ namespace NineMensMorris
             }
             else
             {
-                TriggerInvalidNodeAnimation(node);
-                gm.InfoText.WriteTempText($"That's not {gm.EnemyPlayer}'s token!");
+                gm.TriggerInvalidNodeFX(node);
+
+                if (node.Token != null)
+                {
+                    if (node.Token.Player == gm.CurrentPlayer)
+                    {
+                        gm.InfoText.WriteTempText($"That's your token! Don't destroy that.");
+                    }
+                    else if (gm.NodeIsInMill(node))
+                    {
+                        gm.InfoText.WriteTempText($"Sorry, that token is in a mill.");
+                    }
+                }
+                else
+                {
+                    gm.InfoText.WriteTempText($"That's not {gm.EnemyPlayer}'s token!");
+                }
             }
         }
 
         public override void Exit()
         {
             validNodesForDestruction.Clear();
+
             gm.BatchAnim.MarkValidTokenNodesForSelection(validNodesForDestruction, false);
         }
 
@@ -369,8 +401,10 @@ namespace NineMensMorris
 
         public override void Enter()
         {
-            gm.CurrentPlayerWins();
+            gm.TriggerCurrentPlayerWins();
             gm.InfoText.WritePermanentText($"{gm.CurrentPlayer} wins!");
+            gm.CurrentPlayer.PlayerInfo.UpdateInfoText("Winner");
+            gm.EnemyPlayer.PlayerInfo.UpdateInfoText("Loser");
         }
     }
 
@@ -383,7 +417,7 @@ namespace NineMensMorris
 
         public override void Enter()
         {
-            gm.DrawGame();
+            gm.TriggerDrawGame();
             gm.InfoText.WritePermanentText($"Draw!");
         }
     }

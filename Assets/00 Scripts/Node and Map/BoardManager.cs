@@ -337,7 +337,7 @@ namespace NineMensMorris
                 else uniqueMills.Add(mill);
             }
 
-            return foundMills;
+            return uniqueMills;
 
             bool NodeHasFriendlyToken(Node node)
             {

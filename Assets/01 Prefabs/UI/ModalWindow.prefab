@@ -586,7 +586,7 @@ MonoBehaviour:
   animator: {fileID: 598309170377281268}
   backgroundBlocker: {fileID: 731856509423692225}
   interactionBlocker: {fileID: 4843367418280470628}
-  OpenClip: {fileID: 7400000, guid: d20a59f4456acbc498dfb20bb8e3cb0c, type: 2}
+  OpenClip: {fileID: 7400000, guid: 4e25e931efdbf074499780235d53b547, type: 2}
   CloseClip: {fileID: 7400000, guid: 99b7cf6565c2ddd45ba52b3c04b44fbc, type: 2}
 --- !u!95 &598309170377281268
 Animator:

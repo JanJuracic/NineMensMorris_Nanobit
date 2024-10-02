@@ -138,32 +138,6 @@ MonoBehaviour:
   tokenVisual: {fileID: 8633005452528839611}
   outlineVisual: {fileID: 4398277102332822455}
   shadowVisual: {fileID: 8230003106188590970}
-  fallCurve:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0
-      value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 2
-      outSlope: 2
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
-  fallSpeedPerSecond: 12
-  fallStartHeight: 7.14
   slideCurve:
     serializedVersion: 2
     m_Curve:
@@ -207,6 +181,9 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   slideRelativeSpeed: 2.2
+  slideShakeStrengthFactor: 0.3
+  slideShakeDurationFactor: 0.2
+  slideSound: {fileID: 8300000, guid: 6712a7a474329cb409d917f0b53da266, type: 3}
   flyCurve:
     serializedVersion: 2
     m_Curve:
@@ -242,9 +219,14 @@ MonoBehaviour:
     m_RotationOrder: 4
   flyHeightToLengthRatio: 0.3
   flySpeedPerSecond: 15
+  landShakeStrengthFactor: 0.6
+  landShakeDurationFactor: 0.35
+  jumpSound: {fileID: 8300000, guid: a24b038b9aae1894f9f8fe33907978a0, type: 3}
+  landSound: {fileID: 8300000, guid: 9295c92b62da65840ace727c1ec9d1c3, type: 3}
   destroyDur: 1
   shakeStrength: 0.1
   shakeFrequency: 23.4
+  destroySound: {fileID: 8300000, guid: 7065038097bd0824d980d110dca30dcd, type: 3}
   defaultFriendly: {r: 1, g: 1, b: 1, a: 0.5019608}
   hoveredFriendly: {r: 0.5411765, g: 0.6901961, b: 0.37647063, a: 0.69803923}
   selectedFriendly: {r: 0.5411765, g: 0.6901961, b: 0.37647063, a: 1}

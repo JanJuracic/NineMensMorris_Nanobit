@@ -47,6 +47,9 @@ TagManager:
   - name: BoardNodes
     uniqueID: 3469624677
     locked: 0
-  - name: Tokens
+  - name: TokensBoard
     uniqueID: 2578469023
+    locked: 0
+  - name: TokensSky
+    uniqueID: 1595747637
     locked: 0
