@@ -58,8 +58,14 @@ namespace NineMensMorris
 
         public override void Enter()
         {
-            gm.Board.SetupBoard(gm.BRData); 
-            gm.SetupTokenManagers();
+            gm.Board.SetupBoard(gm.LevelData); 
+            gm.SetupTokenManagers(gm.Board.GetOffsetForTokenManagers());
+            gm.InstantiateNewTokens();
+
+            //Update camera size
+            float height = gm.Board.GetBoardHeight();
+            float width = gm.Board.GetOffsetForTokenManagers();
+            gm.CamSize.UpdateCameraSize(height, width);
         
             ChangeState(PhaseName.SwitchPlayer);
         }

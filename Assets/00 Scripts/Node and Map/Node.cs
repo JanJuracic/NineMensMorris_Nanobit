@@ -31,7 +31,7 @@ namespace NineMensMorris
 
         public override string ToString()
         {
-            return $"Node({BoardCoord}";
+            return $"Node-{BoardCoord}";
         }
 
         public void SetupMono(NodeMono nodeMono)
@@ -51,11 +51,6 @@ namespace NineMensMorris
         {
             this.token = token;
             token.transform.SetParent(mono.transform);
-        }
-
-        public void DestroyToken()
-        {
-            
         }
 
         #endregion

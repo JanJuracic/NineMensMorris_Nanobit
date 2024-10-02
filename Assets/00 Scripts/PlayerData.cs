@@ -9,8 +9,23 @@ public class PlayerData : ScriptableObject
     [SerializeField] string playerName;
     [SerializeField] Color color;
 
-    public string Name => name;
+    public string Name => playerName;
     public Color Color => color;
-
     public PlayerTokensManager TokenManager { get; set; }
+
+    public void UpdateName(string newName)
+    {
+        playerName = newName;
+    }
+
+    public void UpdateColor(Color newColor)
+    {
+        color = newColor;
+    }
+
+    public override string ToString()
+    {
+        string hexColor = ColorUtility.ToHtmlStringRGB(color);
+        return $"<color=#{hexColor}>{playerName}</color>";
+    }
 }

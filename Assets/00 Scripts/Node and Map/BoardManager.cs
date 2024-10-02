@@ -24,11 +24,11 @@ namespace NineMensMorris
         [Header("Unity Events")]
         [SerializeField] UnityEvent<Node> OnNodeClicked;
 
-        BoardAndRulesData currentData;
+        LevelData currentData;
 
         #region NodeMap Generation
 
-        private void CreateNewNodesAndMap(BoardAndRulesData data)
+        private void CreateNewNodesAndMap(LevelData data)
         {
             nodeMap.Clear();
 
@@ -71,7 +71,7 @@ namespace NineMensMorris
             }
         }
 
-        private List<Vector2Int> GetEdgeDirectionsFromWorldCoord(Vector2Int boardCoord, int ring, BoardAndRulesData data)
+        private List<Vector2Int> GetEdgeDirectionsFromWorldCoord(Vector2Int boardCoord, int ring, LevelData data)
         {
             List<Vector2Int> results = new();
 
@@ -155,7 +155,7 @@ namespace NineMensMorris
             OnNodeClicked.Invoke(node);
         }
 
-        public void SetupBoard(BoardAndRulesData data)
+        public void SetupBoard(LevelData data)
         {
             currentData = data;
             CreateNewNodesAndMap(data);

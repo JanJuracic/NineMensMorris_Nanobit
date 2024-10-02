@@ -6,6 +6,7 @@ using Unity.Hierarchy;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
@@ -177,14 +178,31 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    [ContextMenu("Force Win")]
     public void CurrentPlayerWins()
     {
         OnPlayerWin.Invoke(CurrentPlayer);
     }
 
+    [ContextMenu("Force Draw")]
     public void DrawGame()
     {
         OnDrawGame.Invoke();
     }
+
+    #region Button Interaction
+
+    public void GoToMainMenu()
+    {
+        SceneManager.LoadScene("MainMenuScene");
+    }
+
+    public void RestartGame()
+    {
+        SceneManager.LoadScene("GameScene");
+    }
+
+
+    #endregion
 }
 
