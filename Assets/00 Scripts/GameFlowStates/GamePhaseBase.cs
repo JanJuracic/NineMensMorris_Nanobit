@@ -243,7 +243,7 @@ namespace NineMensMorris
 
         private bool PlayerCanFly()
         {
-            return gm.CurrentPlayer.TokenManager.LivingTokensCount <= gm.BRData.MaxTokensForFlying;
+            return gm.CurrentPlayer.TokenManager.LivingTokensCount <= gm.LevelData.MaxTokensForFlying;
         }
     }
 
@@ -323,7 +323,7 @@ namespace NineMensMorris
                 DestroyTokenOnNode(node);
 
                 //Check if win condition satisfied
-                if (gm.EnemyPlayer.TokenManager.LivingTokensCount < gm.BRData.NumOfTokensForMill)
+                if (gm.EnemyPlayer.TokenManager.LivingTokensCount < gm.LevelData.NumOfTokensForMill)
                 {
                     ChangeState(PhaseName.WinGame);
                 }

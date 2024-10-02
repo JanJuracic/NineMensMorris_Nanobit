@@ -23,7 +23,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] PlayerData playerTwo;
 
     [Header("Board and Rules")]
-    [SerializeField] BoardAndRulesData boardAndRules;
+    [SerializeField] LevelDataContainer levelDataContainer;
 
     [Header("Unity Events")]
     [SerializeField] UnityEvent<PlayerData> OnPlayerWin;
@@ -32,7 +32,7 @@ public class GameManager : MonoBehaviour
     List<HashSet<Node>> currentMills = new();
 
     //PROPERTIES, used by the state machine
-    public BoardAndRulesData BRData => boardAndRules;
+    public LevelData LevelData => levelDataContainer.CurrentLevel;
     public BoardManager Board => boardManager;
     public BatchAnimator BatchAnim => batchAnim;
     public CameraSizeController CamSize => cameraSizeController;
@@ -100,8 +100,8 @@ public class GameManager : MonoBehaviour
 
     public void InstantiateNewTokens()
     {
-        playerOne.TokenManager.InstantiateNewTokens(boardAndRules.TokensPerPlayer);
-        playerTwo.TokenManager.InstantiateNewTokens(boardAndRules.TokensPerPlayer);
+        playerOne.TokenManager.InstantiateNewTokens(LevelData.TokensPerPlayer);
+        playerTwo.TokenManager.InstantiateNewTokens(LevelData.TokensPerPlayer);
     }
 
     public HashSet<Node> GetAllNodesInMills(PlayerData targetPlayer)
@@ -119,7 +119,7 @@ public class GameManager : MonoBehaviour
 
     public void UpdateMillsAndSetNewMillCount(Node tokenStartNode, Node tokenEndNode, PlayerData player)
     {
-        List<HashSet<Node>> newMills = boardManager.GetNewMills(tokenEndNode, player, boardAndRules.NumOfTokensForMill);
+        List<HashSet<Node>> newMills = boardManager.GetNewMills(tokenEndNode, player, LevelData.NumOfTokensForMill);
 
         UpdateMillsForRemovedToken(tokenStartNode);
 
@@ -147,7 +147,7 @@ public class GameManager : MonoBehaviour
     public bool PlayerHasLegalMoves(PlayerData targetPlayer)
     {
         //If the player can fly, or still has tokens in supply
-        if (targetPlayer.TokenManager.LivingTokensCount <= boardAndRules.MaxTokensForFlying
+        if (targetPlayer.TokenManager.LivingTokensCount <= LevelData.MaxTokensForFlying
             || targetPlayer.TokenManager.TokensInSupplyCount > 0)
         {
             List<Node> emptyNodes = Board
